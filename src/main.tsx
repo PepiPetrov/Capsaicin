@@ -12,7 +12,9 @@ import CreatePage from "./pages/CreatePage"
 import DetailsPage from "./pages/DetailsPage"
 import EditPage from "./pages/EditPage"
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(
+  document.getElementById("root") ?? new HTMLElement()
+).render(
   <React.StrictMode>
     <Router hook={useHashLocation}>
       <Router hook={useHashLocation}>
@@ -31,7 +33,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <Route path="/details/:id">
           {(params) => (
             <Layout>
-              <DetailsPage id={parseInt(params.id)} />
+              <DetailsPage id={parseInt(params.id, 10)} />
             </Layout>
           )}
         </Route>
@@ -39,7 +41,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <Route path="/edit/:id">
           {(params) => (
             <Layout>
-              <EditPage id={parseInt(params.id)} />
+              <EditPage id={parseInt(params.id, 10)} />
             </Layout>
           )}
         </Route>

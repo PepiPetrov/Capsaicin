@@ -65,7 +65,9 @@ export const TagInput = ({
       <div className="flex items-center gap-2">
         <Input
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            setInputValue(e.target.value)
+          }}
           onKeyDown={handleKeyDown}
           onBlur={addTag}
           placeholder={placeholder}
@@ -93,7 +95,9 @@ export const TagInput = ({
             <span>{tag}</span>
             <button
               type="button"
-              onClick={() => removeTag(index)}
+              onClick={() => {
+                removeTag(index)
+              }}
               className="ml-1 rounded-full p-0.5 hover:bg-gray-200"
             >
               <X className="h-3 w-3" />

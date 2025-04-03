@@ -1,5 +1,3 @@
-import { UseFormReturn } from "react-hook-form"
-
 import { Card, CardContent } from "@/components/ui/card"
 import {
   FormControl,
@@ -11,8 +9,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { TagInput } from "@/components/TagInput"
 
+import { RecipeFormReturn } from "."
+
 interface RecipeFormStep1Props {
-  form: UseFormReturn<any>
+  form: RecipeFormReturn
 }
 
 export default function RecipeFormStep1({ form }: RecipeFormStep1Props) {
@@ -53,10 +53,7 @@ export default function RecipeFormStep1({ form }: RecipeFormStep1Props) {
                       activeTagIndex={activeTagIndex}
                       clearAll
                     /> */}
-                    <TagInput
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                    />
+                    <TagInput value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -20,7 +20,9 @@ export function MenuModeToggle() {
             <RadioGroupItem
               id="light"
               value="light"
-              onClick={() => setTheme("light")}
+              onClick={() => {
+                setTheme("light")
+              }}
             />
             <SunIcon className="h-4 w-4" />
             <span>Light</span>
@@ -30,7 +32,9 @@ export function MenuModeToggle() {
             <RadioGroupItem
               id="dark"
               value="dark"
-              onClick={() => setTheme("dark")}
+              onClick={() => {
+                setTheme("dark")
+              }}
             />
             <MoonIcon className="h-4 w-4" />
             <span>Dark</span>
@@ -40,7 +44,9 @@ export function MenuModeToggle() {
             <RadioGroupItem
               id="system"
               value="system"
-              onClick={() => setTheme("system")}
+              onClick={() => {
+                setTheme("system")
+              }}
             />
             <LaptopIcon className="h-4 w-4" />
             <span>System</span>

@@ -1,8 +1,7 @@
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Menu } from "@/components/sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
-
-import { SidebarProvider } from "@/components/ui/sidebar"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

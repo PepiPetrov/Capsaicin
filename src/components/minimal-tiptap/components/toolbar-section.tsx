@@ -56,7 +56,9 @@ export const ToolbarSection: React.FC<ToolbarSectionProps> = ({
     (action: FormatAction) => (
       <ToolbarButton
         key={action.label}
-        onClick={() => action.action(editor)}
+        onClick={() => {
+          action.action(editor)
+        }}
         disabled={!action.canExecute(editor)}
         isActive={action.isActive(editor)}
         tooltip={`${action.label} ${action.shortcuts.map((s) => getShortcutKey(s).symbol).join(" ")}`}
@@ -74,7 +76,9 @@ export const ToolbarSection: React.FC<ToolbarSectionProps> = ({
     (action: FormatAction) => (
       <DropdownMenuItem
         key={action.label}
-        onClick={() => action.action(editor)}
+        onClick={() => {
+          action.action(editor)
+        }}
         disabled={!action.canExecute(editor)}
         className={cn("flex flex-row items-center justify-between gap-4", {
           "bg-accent": action.isActive(editor),

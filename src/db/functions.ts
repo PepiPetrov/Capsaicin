@@ -12,7 +12,7 @@ import Database, { QueryResult } from "@tauri-apps/plugin-sql"
 async function executeQuery<T>(
   db: Database | null,
   query: string,
-  params: any[] = []
+  params: unknown[] = []
 ): Promise<T | null> {
   try {
     return ((await db?.execute(query, params)) as T) ?? null
@@ -25,7 +25,7 @@ async function executeQuery<T>(
 async function fetchQuery<T>(
   db: Database | null,
   query: string,
-  params: any[] = []
+  params: unknown[] = []
 ): Promise<T | null> {
   try {
     return (await db?.select<T>(query, params)) ?? null
@@ -36,14 +36,16 @@ async function fetchQuery<T>(
 }
 
 // === Generic CRUD Function for Ingredients, Directions, and Equipment ===
-async function insertGeneric<T extends {}>(
+async function insertGeneric(
   db: Database | null,
   table: string,
-  data: T
+  data: object
 ): Promise<QueryResult | null> {
   const keys = Object.keys(data).join(", ")
   const values = Object.values(data)
-  const placeholders = values.map((_, index) => `?${index + 1}`).join(", ")
+  const placeholders = values
+    .map((_, index) => `?${(index + 1).toString()}`)
+    .join(", ")
   return executeQuery(
     db,
     `INSERT INTO ${table} (${keys}) VALUES (${placeholders})`,
@@ -63,14 +65,16 @@ async function fetchGeneric<T>(
   )
 }
 
-async function updateGeneric<T extends { id: number }>(
+async function updateGeneric(
   db: Database | null,
   table: string,
-  data: T
+  data: { id: number }
 ): Promise<QueryResult | null> {
   const keys = Object.keys(data).filter((k) => k !== "id")
-  const values = keys.map((k) => data[k as keyof T])
-  const setClause = keys.map((k, i) => `${k} = ?${i + 2}`).join(", ")
+  const values = keys.map((k) => data[k as keyof { id: number }])
+  const setClause = keys
+    .map((k, i) => `${k} = ?${(i + 2).toString()}`)
+    .join(", ")
   return executeQuery(db, `UPDATE ${table} SET ${setClause} WHERE id = ?1`, [
     data.id,
     ...values,
@@ -98,7 +102,7 @@ export const fetchAllRecipes = (db: Database | null) =>
   fetchQuery<Recipe[]>(db, "SELECT * FROM Recipe")
 
 export const updateRecipe = (db: Database | null, recipe: Recipe) => {
-  updateGeneric(db, "Recipe", { ...recipe, id: recipe.id ?? 0 })
+  void updateGeneric(db, "Recipe", { ...recipe, id: recipe.id ?? 0 })
 }
 
 export const deleteRecipe = (db: Database | null, recipe_id: number) =>
@@ -215,8 +219,7 @@ export const createRecipe = async (
     equipment: string[]
     nutrition: { calories: number; carbs: number; fat: number; protein: number }
     isPerServing: boolean
-  },
-  shouldRedirect: boolean = false
+  }
 ): Promise<number | null> => {
   const recipe: Omit<Recipe, "id"> = {
     name: data.name,
@@ -269,7 +272,8 @@ export const createRecipe = async (
   )
 
   // Insert nutrition
-  let { calories, fat, protein, carbs } = data.nutrition
+  let { calories } = data.nutrition
+  const { fat, protein, carbs } = data.nutrition
 
   if (!data.isPerServing) calories /= data.servings
 
@@ -357,8 +361,8 @@ export const editRecipe = async (
     ])
 
     // Update nutrition
-    // let [calories, fat, protein, carbs] = data.nutrition
-    let { calories, fat, protein, carbs } = data.nutrition
+    let { calories } = data.nutrition
+    const { fat, protein, carbs } = data.nutrition
 
     if (!data.isPerServing) calories /= data.servings
 

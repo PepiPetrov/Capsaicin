@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 import { createRecipe, editRecipe, fetchFullRecipeById } from "@/db/functions"
 import { Direction, Equipment, Ingredient } from "@/db/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, UseFormReturn } from "react-hook-form"
 import { useLocation } from "wouter"
 import { z } from "zod"
 
@@ -28,11 +28,11 @@ const zParsedNumber = (msg: string, opts?: { min?: number; max?: number }) => {
   let schema = z.number({ required_error: msg })
   if (opts?.min !== undefined)
     schema = schema.min(opts.min, {
-      message: `Must be no less than ${opts.min}`,
+      message: `Must be no less than ${opts.min.toString()}`,
     })
   if (opts?.max !== undefined)
     schema = schema.max(opts.max, {
-      message: `Must be no more than ${opts.max}`,
+      message: `Must be no more than ${opts.max.toString()}`,
     })
   return z.preprocess((val) => {
     const parsed = parseInt(val as string, 10)
@@ -58,7 +58,9 @@ export const recipeZodSchema = z.object({
       if (typeof val === "string") return val
       return new Promise<string>((resolve, reject) => {
         const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
+        reader.onload = () => {
+          resolve(reader.result as string)
+        }
         reader.onerror = reject
         reader.readAsDataURL(val)
       })
@@ -80,6 +82,9 @@ export const recipeZodSchema = z.object({
     protein: zParsedNumber("Amount of protein is required"),
   }),
 })
+
+export type RecipeFormData = z.infer<typeof recipeZodSchema>
+export type RecipeFormReturn = UseFormReturn<z.infer<typeof recipeZodSchema>>
 
 export default function RecipeForm({ id = -1 }: { id?: number }) {
   const [step, setStep] = useState<number>(0)
@@ -106,10 +111,10 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
       form.reset({
         name: fetchedRecipe?.recipe.name,
         category: fetchedRecipe?.recipe.category,
-        rating: fetchedRecipe?.recipe.rating || 0,
-        prep_time: fetchedRecipe?.recipe.prep_time || 0,
-        cook_time: fetchedRecipe?.recipe.cook_time || 0,
-        servings: fetchedRecipe?.recipe.servings || 0,
+        rating: fetchedRecipe?.recipe.rating ?? 0,
+        prep_time: fetchedRecipe?.recipe.prep_time ?? 0,
+        cook_time: fetchedRecipe?.recipe.cook_time ?? 0,
+        servings: fetchedRecipe?.recipe.servings ?? 0,
         title_image: fetchedRecipe?.recipe.title_image,
         isPerServing: true,
         instructions: fetchedRecipe?.directions.map(
@@ -124,37 +129,36 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
           (eq: Equipment) => eq.equipment
         ),
         nutrition: {
-          calories: Math.ceil(fetchedRecipe?.nutrition.calories || 0),
-          fat: fetchedRecipe?.nutrition.fat || 0,
-          protein: fetchedRecipe?.nutrition.protein || 0,
-          carbs: fetchedRecipe?.nutrition.carbs || 0,
+          calories: Math.ceil(fetchedRecipe?.nutrition.calories ?? 0),
+          fat: fetchedRecipe?.nutrition.fat ?? 0,
+          protein: fetchedRecipe?.nutrition.protein ?? 0,
+          carbs: fetchedRecipe?.nutrition.carbs ?? 0,
         },
       })
     }
-    if (id != -1 && !loading) {
+    if (id !== -1 && !loading) {
       void fetchRecipe()
     }
-  }, [id, db]) // ✅ Correct dependencies
+  }, [id, db, loading, form]) // ✅ Correct dependencies
 
   const callback = useCallback(
     async (data: typeof recipeZodSchema._type) => {
-      if (id != -1) {
+      if (id !== -1) {
         await editRecipe(db, id, {
           ...data,
           ingredients: data.ingredients.map((x) => ({ ...x, id: id })),
           equipment: data.equipment.map((x) => ({ equipment: x, id: id })),
         })
         return id
-      } else {
-        return await createRecipe(db, data)
       }
+      return await createRecipe(db, data)
     },
-    [db]
+    [db, id]
   )
 
   const onSubmit = (data: typeof recipeZodSchema._type) => {
-    callback(data).then((id) => {
-      setLocation("/details/" + id)
+    void callback(data).then((id) => {
+      setLocation(`/details/${id?.toString() ?? ""}`)
     })
   }
 
@@ -175,7 +179,10 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
 
   return !error ? (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
+      <form
+        onSubmit={() => void form.handleSubmit(onSubmit)}
+        className="h-full"
+      >
         <Card className="mx-auto my-10 max-w-6xl overflow-hidden shadow-lg">
           <CardHeader className="flex items-center justify-between border-b px-6 py-4">
             <div>
@@ -189,7 +196,9 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setStep(step - 1)}
+                  onClick={() => {
+                    setStep(step - 1)
+                  }}
                 >
                   Back
                 </Button>

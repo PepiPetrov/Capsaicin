@@ -4,7 +4,6 @@ import { GitHubLogoIcon } from "@radix-ui/react-icons"
 import { open } from "@tauri-apps/plugin-shell"
 import { HomeIcon, ArrowUpCircle as UpdateIcon } from "lucide-react"
 
-import { Icons } from "@/components/icons"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DialogContent,
@@ -13,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Icons } from "@/components/icons"
 
 export function AboutDialog() {
   const [updateText, setUpdateText] = useState("")
@@ -33,7 +33,9 @@ export function AboutDialog() {
               <span
                 className="cursor-pointer text-blue-500"
                 onClick={() =>
-                  open("https://github.com/agmmnn/tauri-ui/releases/tag/v0.2.0")
+                  void open(
+                    "https://github.com/agmmnn/tauri-ui/releases/tag/v0.2.0"
+                  )
                 }
               >
                 release notes
@@ -55,11 +57,11 @@ export function AboutDialog() {
         <div className="mr-auto flex flex-row gap-2">
           <HomeIcon
             className="h-5 w-5 cursor-pointer transition hover:text-slate-300"
-            onClick={() => open("https://github.com/agmmnn/tauri-ui")}
+            onClick={() => void open("https://github.com/agmmnn/tauri-ui")}
           />
           <GitHubLogoIcon
             className="h-5 w-5 cursor-pointer transition hover:text-slate-300 "
-            onClick={() => open("https://github.com/agmmnn/tauri-ui")}
+            onClick={() => void open("https://github.com/agmmnn/tauri-ui")}
           />
         </div>
 
@@ -67,7 +69,9 @@ export function AboutDialog() {
           type="submit"
           variant="outline"
           className="h-7 gap-1"
-          onClick={() => setUpdateText("You have the latest version.")}
+          onClick={() => {
+            setUpdateText("You have the latest version.")
+          }}
         >
           <UpdateIcon /> Check for Updates
         </Button>

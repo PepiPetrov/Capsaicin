@@ -1,8 +1,7 @@
-import { mergeAttributes } from '@tiptap/react'
-import TiptapLink from '@tiptap/extension-link'
-import type { EditorView } from '@tiptap/pm/view'
-import { getMarkRange } from '@tiptap/react'
-import { Plugin, TextSelection } from '@tiptap/pm/state'
+import TiptapLink from "@tiptap/extension-link"
+import { Plugin, TextSelection } from "@tiptap/pm/state"
+import type { EditorView } from "@tiptap/pm/view"
+import { getMarkRange, mergeAttributes } from "@tiptap/react"
 
 export const Link = TiptapLink.extend({
   /*
@@ -17,20 +16,28 @@ export const Link = TiptapLink.extend({
    * - <a> elements with an href attribute that contains 'javascript:'
    */
   parseHTML() {
-    return [{ tag: 'a[href]:not([data-type="button"]):not([href *= "javascript:" i])' }]
+    return [
+      {
+        tag: 'a[href]:not([data-type="button"]):not([href *= "javascript:" i])',
+      },
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['a', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0]
+    return [
+      "a",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0,
+    ]
   },
 
   addOptions() {
     return {
-      ...this.parent?.(),
+      ...this.parent(),
       openOnClick: false,
       HTMLAttributes: {
-        class: 'link'
-      }
+        class: "link",
+      },
     }
   },
 
@@ -48,7 +55,7 @@ export const Link = TiptapLink.extend({
              * Handles the 'Escape' key press when there's a selection within the link.
              * This will move the cursor to the end of the link.
              */
-            if (event.key === 'Escape' && selection.empty !== true) {
+            if (event.key === "Escape" && !selection.empty) {
               editor.commands.focus(selection.to, { scrollIntoView: false })
             }
 
@@ -79,11 +86,11 @@ export const Link = TiptapLink.extend({
             const transaction = tr.setSelection(new TextSelection($start, $end))
 
             view.dispatch(transaction)
-          }
-        }
-      })
+          },
+        },
+      }),
     ]
-  }
+  },
 })
 
 export default Link

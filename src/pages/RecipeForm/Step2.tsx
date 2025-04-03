@@ -1,5 +1,4 @@
 import { Ingredient } from "@/db/types"
-import { UseFormReturn } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,23 +18,25 @@ import {
 import { Input } from "@/components/ui/input"
 import { MinimalTiptapEditor } from "@/components/minimal-tiptap"
 
+import { RecipeFormReturn } from "."
+
 const InstructionDialog = ({
   form,
   index,
   open = true,
   onDelete,
 }: {
-  form: UseFormReturn<any>
+  form: RecipeFormReturn
   index: number
   open: boolean
   onDelete: () => void
 }) => {
-  const fieldId = `instructions.${index}`
-
   return (
     <Dialog defaultOpen={open}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline">Edit Instruction #{index + 1}</Button>
+        <Button type="button" variant="outline">
+          Edit Instruction #{index + 1}
+        </Button>
       </DialogTrigger>
       <DialogContent aria-describedby="">
         <DialogHeader>
@@ -43,7 +44,8 @@ const InstructionDialog = ({
         </DialogHeader>
         <FormField
           control={form.control}
-          name={fieldId}
+          //@ts-expect-error the field name is valid
+          name={`instructions.${index.toString()}`}
           render={({ field }) => (
             <FormItem className="mt-1">
               <FormControl>
@@ -65,7 +67,12 @@ const InstructionDialog = ({
             </FormItem>
           )}
         />
-        <Button type="button" variant="destructive" onClick={onDelete} className="mt-4">
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={onDelete}
+          className="mt-4"
+        >
           Delete Instruction
         </Button>
       </DialogContent>
@@ -79,17 +86,19 @@ const IngredientDialog = ({
   open = true,
   onDelete,
 }: {
-  form: UseFormReturn<any>
+  form: RecipeFormReturn
   index: number
   open: boolean
   onDelete: () => void
 }) => {
-  const fieldId = `ingredients.${index}`
+  const fieldId = `ingredients.${index.toString()}`
 
   return (
     <Dialog defaultOpen={open}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline">Edit Ingredient #{index + 1}</Button>
+        <Button type="button" variant="outline">
+          Edit Ingredient #{index + 1}
+        </Button>
       </DialogTrigger>
       <DialogContent aria-describedby="">
         <DialogHeader>
@@ -98,7 +107,7 @@ const IngredientDialog = ({
         <div className="space-y-4">
           <FormField
             control={form.control}
-            name={`${fieldId}.ingredient`}
+            name={`${fieldId.toString()}.ingredient`}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Ingredient</FormLabel>
@@ -111,7 +120,8 @@ const IngredientDialog = ({
           />
           <FormField
             control={form.control}
-            name={`${fieldId}.unit`}
+            //@ts-expect-error the field name is valid
+            name={`${fieldId.toString()}.unit`}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Unit</FormLabel>
@@ -124,6 +134,7 @@ const IngredientDialog = ({
           />
           <FormField
             control={form.control}
+            //@ts-expect-error the field name is valid
             name={`${fieldId}.quantity`}
             render={({ field }) => (
               <FormItem>
@@ -140,7 +151,12 @@ const IngredientDialog = ({
             )}
           />
         </div>
-        <Button type="button" variant="destructive" onClick={onDelete} className="mt-4">
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={onDelete}
+          className="mt-4"
+        >
           Delete Ingredient
         </Button>
       </DialogContent>
@@ -154,17 +170,19 @@ const EquipmentDialog = ({
   open = true,
   onDelete,
 }: {
-  form: UseFormReturn<any>
+  form: RecipeFormReturn
   index: number
   open: boolean
   onDelete: () => void
 }) => {
-  const fieldId = `equipment.${index}`
+  const fieldId = `equipment.${index.toString()}`
 
   return (
     <Dialog defaultOpen={open}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline">Edit Equipment #{index + 1}</Button>
+        <Button type="button" variant="outline">
+          Edit Equipment #{index + 1}
+        </Button>
       </DialogTrigger>
       <DialogContent aria-describedby="">
         <DialogHeader>
@@ -172,6 +190,7 @@ const EquipmentDialog = ({
         </DialogHeader>
         <FormField
           control={form.control}
+          //@ts-expect-error the field name is valid
           name={fieldId}
           render={({ field }) => (
             <FormItem>
@@ -183,7 +202,12 @@ const EquipmentDialog = ({
             </FormItem>
           )}
         />
-        <Button type="button" variant="destructive" onClick={onDelete} className="mt-4">
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={onDelete}
+          className="mt-4"
+        >
           Delete Equipment
         </Button>
       </DialogContent>
@@ -191,15 +215,11 @@ const EquipmentDialog = ({
   )
 }
 
-export default function RecipeFormStep2({
-  form,
-}: {
-  form: UseFormReturn<any>
-}) {
+export default function RecipeFormStep2({ form }: { form: RecipeFormReturn }) {
   // Use form.watch to get current values
-  const instructions = form.watch("instructions") as string[]
+  const instructions = form.watch("instructions")
   const ingredients = form.watch("ingredients") as Ingredient[]
-  const equipment = form.watch("equipment") as string[]
+  const equipment = form.watch("equipment")
 
   const addInstruction = () => {
     form.setValue("instructions", [...instructions, ""])
@@ -235,7 +255,7 @@ export default function RecipeFormStep2({
   }
 
   return (
-    <div className="flex flex-col space-y-6 justify-center">
+    <div className="flex flex-col justify-center space-y-6">
       {/* The 3 columns with dialogs */}
       <div className="flex space-x-4">
         {/* Instructions Column */}
@@ -246,7 +266,9 @@ export default function RecipeFormStep2({
               form={form}
               index={index}
               open={instructions.length === 0 || instructions[index] === ""}
-              onDelete={() => deleteInstruction(index)}
+              onDelete={() => {
+                deleteInstruction(index)
+              }}
             />
           ))}
         </div>
@@ -261,7 +283,9 @@ export default function RecipeFormStep2({
               open={
                 ingredients.length === 0 || ingredients[index].ingredient === ""
               }
-              onDelete={() => deleteIngredient(index)}
+              onDelete={() => {
+                deleteIngredient(index)
+              }}
             />
           ))}
         </div>
@@ -274,7 +298,9 @@ export default function RecipeFormStep2({
               form={form}
               index={index}
               open={equipment.length === 0 || equipment[index] === ""}
-              onDelete={() => deleteEquipment(index)}
+              onDelete={() => {
+                deleteEquipment(index)
+              }}
             />
           ))}
         </div>

@@ -10,7 +10,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
 import { MenuModeToggle } from "@/components/menu-mode-toggle"
 
 // Menu items.

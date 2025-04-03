@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog"
 
 const DeleteModal = ({ id, db }: { id: number; db: Database | null }) => {
-  const [location, setLocation] = useLocation()
+  const [, setLocation] = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -54,14 +54,16 @@ const DeleteModal = ({ id, db }: { id: number; db: Database | null }) => {
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false)
+            }}
             disabled={isDeleting}
           >
             Cancel
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => void handleDelete()}
             disabled={isDeleting}
           >
             {isDeleting ? (
@@ -103,8 +105,10 @@ const RecipeImage: React.FC<RecipeImageProps> = ({
     <img
       src={src}
       alt={alt}
-      className={`${className}`}
-      onError={() => setError(true)}
+      className={className}
+      onError={() => {
+        setError(true)
+      }}
       {...props} // Allows passing additional attributes (e.g., loading, style)
     />
   )
@@ -112,10 +116,9 @@ const RecipeImage: React.FC<RecipeImageProps> = ({
 
 export default function DetailsPage({ id }: { id: number }) {
   const { db } = useDatabase()
-  // const { id } = useParams() // ✅ Destructure params
-  const [recipe, setRecipe] = useState<FullRecipeFetch | null>(null) // ✅ Use state
+  const [recipe, setRecipe] = useState<FullRecipeFetch | null>(null)
 
-  const [location, setLocation] = useLocation()
+  const [, setLocation] = useLocation()
 
   useEffect(() => {
     if (!id) return // ✅ Prevents running with undefined id
@@ -139,7 +142,7 @@ export default function DetailsPage({ id }: { id: number }) {
         <div className="w-full md:w-1/3">
           <RecipeImage
             src={recipe?.recipe.title_image}
-            alt={`Image for "${recipe?.recipe.name}"`}
+            alt={`Image for "${recipe?.recipe.name ?? ""}"`}
             className="h-48 w-full rounded-xl object-cover"
           />
         </div>
@@ -148,7 +151,7 @@ export default function DetailsPage({ id }: { id: number }) {
         <div className="w-full space-y-2 md:w-2/3">
           <h1 className="text-2xl font-semibold">{recipe?.recipe.name}</h1>
           <p className="text-sm text-gray-400">
-            {recipe?.recipe.category.split(",").length == 1
+            {recipe?.recipe.category.split(",").length === 1
               ? "Category"
               : "Categories"}
             : {recipe?.recipe.category}
@@ -170,7 +173,11 @@ export default function DetailsPage({ id }: { id: number }) {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button onClick={() => setLocation("/edit/" + recipe?.recipe.id)}>
+            <Button
+              onClick={() => {
+                setLocation(`/edit/${recipe?.recipe.id?.toString() ?? ""}`)
+              }}
+            >
               Edit
             </Button>
             <DeleteModal id={recipe?.recipe.id ?? -1} db={db} />
@@ -187,9 +194,9 @@ export default function DetailsPage({ id }: { id: number }) {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <span className="font-semibold">Calories:</span>{" "}
-                {new Intl.NumberFormat("pl-PL", { useGrouping: true }).format(
-                  recipe.nutrition.calories
-                ) + " cal"}
+                {`${new Intl.NumberFormat("pl-PL", {
+                  useGrouping: true,
+                }).format(recipe.nutrition.calories)} cal`}
               </div>
               <div className="flex flex-col">
                 <div>

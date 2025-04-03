@@ -1,5 +1,3 @@
-import { UseFormReturn } from "react-hook-form"
-
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -11,11 +9,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-export default function RecipeFormStep3({
-  form,
-}: {
-  form: UseFormReturn<any>
-}) {
+import { RecipeFormReturn } from "."
+
+export default function RecipeFormStep3({ form }: { form: RecipeFormReturn }) {
   return (
     <div className="flex gap-5">
       <div className="relative flex flex-1 flex-col">

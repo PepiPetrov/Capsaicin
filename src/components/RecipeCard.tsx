@@ -33,7 +33,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         <Button
           className="mt-4 w-full"
           onClick={() => {
-            setLocation("/details/" + recipe.id)
+            setLocation(`/details/${recipe.id?.toString() ?? ""}`)
           }}
         >
           View Recipe

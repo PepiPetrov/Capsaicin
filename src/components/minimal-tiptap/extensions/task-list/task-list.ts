@@ -4,7 +4,7 @@ import { TaskList as TiptapTaskList } from "@tiptap/extension-task-list"
 export const TaskList = TiptapTaskList.extend({
   addOptions() {
     return {
-      ...this.parent?.(),
+      ...this.parent(),
       defaultLanguage: null,
       HTMLAttributes: {
         class: "list-node",

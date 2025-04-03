@@ -1,23 +1,23 @@
-import { Extension } from '@tiptap/react'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
-import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import { Plugin, PluginKey } from "@tiptap/pm/state"
+import { Decoration, DecorationSet } from "@tiptap/pm/view"
+import { Extension } from "@tiptap/react"
 
 export const Selection = Extension.create({
-  name: 'selection',
+  name: "selection",
 
   addProseMirrorPlugins() {
     const { editor } = this
 
     return [
       new Plugin({
-        key: new PluginKey('selection'),
+        key: new PluginKey("selection"),
         props: {
           decorations(state) {
             if (state.selection.empty) {
               return null
             }
 
-            if (editor.isFocused === true) {
+            if (editor.isFocused) {
               return null
             }
 
@@ -27,14 +27,14 @@ export const Selection = Extension.create({
 
             return DecorationSet.create(state.doc, [
               Decoration.inline(state.selection.from, state.selection.to, {
-                class: 'selection'
-              })
+                class: "selection",
+              }),
             ])
-          }
-        }
-      })
+          },
+        },
+      }),
     ]
-  }
+  },
 })
 
 export default Selection
