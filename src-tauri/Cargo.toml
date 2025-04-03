@@ -1,0 +1,29 @@
+[package]
+name = "app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
+repository = ""
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.5", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.3.0", features = [] }
+tauri-plugin-log = "2.0.0-rc"
+tauri-plugin-os = "2.2.0"
+tauri-plugin-sql = { version = "2.2.0", features = ["sqlite"] }
+
+[profile.release]
+opt-level = "z"
+debug = false
+lto = true
+codegen-units = 1
+strip = true
+incremental = false
+debug-assertions = false
