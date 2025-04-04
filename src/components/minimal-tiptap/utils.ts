@@ -2,17 +2,17 @@ import type { Editor } from "@tiptap/react"
 
 import type { MinimalTiptapProps } from "./minimal-tiptap"
 
-interface ShortcutKeyResult {
+type ShortcutKeyResult = {
   symbol: string
   readable: string
 }
 
-export interface FileError {
+export type FileError = {
   file: File | string
   reason: "type" | "size" | "invalidBase64" | "base64NotAllowed"
 }
 
-export interface FileValidationOptions {
+export type FileValidationOptions = {
   allowedMimeTypes: string[]
   maxFileSize?: number
   allowBase64: boolean
@@ -178,13 +178,13 @@ const checkTypeAndSize = (
 }
 
 const base64MimeType = (encoded: string): string => {
-  const result = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/.exec(encoded)
+  const result = encoded.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)
   return result && result.length > 1 ? result[1] : "unknown"
 }
 
 const isBase64 = (str: string): boolean => {
   if (str.startsWith("data:")) {
-    const matches = /^data:[^;]+;base64,(.+)$/.exec(str)
+    const matches = str.match(/^data:[^;]+;base64,(.+)$/)
     if (matches && matches[1]) {
       str = matches[1]
     } else {

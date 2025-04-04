@@ -108,9 +108,7 @@ export const SectionOne: React.FC<SectionOneProps> = React.memo(
       ({ label, element: Element, level, className, shortcuts }: TextStyle) => (
         <DropdownMenuItem
           key={label}
-          onClick={() => {
-            handleStyleChange(level)
-          }}
+          onClick={() => handleStyleChange(level)}
           className={cn("flex flex-row items-center justify-between gap-4", {
             "bg-accent": level
               ? editor.isActive("heading", { level })

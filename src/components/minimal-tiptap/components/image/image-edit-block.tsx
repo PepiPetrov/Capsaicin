@@ -22,11 +22,11 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
   }, [])
 
   const handleFile = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files
       if (!files?.length) return
 
-      const insertImages = () => {
+      const insertImages = async () => {
         const contentBucket = []
         const filesArray = Array.from(files)
 
@@ -37,7 +37,7 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
         editor.commands.setImages(contentBucket)
       }
 
-      insertImages()
+      await insertImages()
       close()
     },
     [editor, close]
@@ -68,9 +68,9 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
             placeholder="https://example.com"
             value={link}
             className="grow"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setLink(e.target.value)
-            }}
+            }
           />
           <Button type="submit" className="ml-2">
             Submit

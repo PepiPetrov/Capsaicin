@@ -17,7 +17,7 @@ export const Selection = Extension.create({
               return null
             }
 
-            if (editor.isFocused) {
+            if (editor.isFocused === true) {
               return null
             }
 

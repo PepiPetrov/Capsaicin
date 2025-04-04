@@ -22,7 +22,7 @@ export const MeasuredContainer = React.forwardRef(
     const innerRef = React.useRef<HTMLElement>(null)
     const rect = useContainerSize(innerRef.current)
 
-    React.useImperativeHandle(ref, () => innerRef.current!)
+    React.useImperativeHandle(ref, () => innerRef.current as HTMLElement)
 
     const customStyle = {
       [`--${name}-width`]: `${rect.width}px`,

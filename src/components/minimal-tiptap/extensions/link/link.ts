@@ -33,7 +33,7 @@ export const Link = TiptapLink.extend({
 
   addOptions() {
     return {
-      ...this.parent(),
+      ...this.parent?.(),
       openOnClick: false,
       HTMLAttributes: {
         class: "link",
@@ -55,7 +55,7 @@ export const Link = TiptapLink.extend({
              * Handles the 'Escape' key press when there's a selection within the link.
              * This will move the cursor to the end of the link.
              */
-            if (event.key === "Escape" && !selection.empty) {
+            if (event.key === "Escape" && selection.empty !== true) {
               editor.commands.focus(selection.to, { scrollIntoView: false })
             }
 

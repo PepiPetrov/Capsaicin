@@ -151,7 +151,7 @@ export const SectionThree: React.FC<SectionThreeProps> = ({
   variant,
 }) => {
   const color =
-    editor.getAttributes("textStyle").color || "hsl(var(--foreground))"
+    editor.getAttributes("textStyle")?.color || "hsl(var(--foreground))"
   const [selectedColor, setSelectedColor] = React.useState(color)
 
   const handleColorChange = React.useCallback(

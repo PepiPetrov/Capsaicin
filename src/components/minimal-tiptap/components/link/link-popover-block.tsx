@@ -29,9 +29,7 @@ export const LinkPopoverBlock: React.FC<LinkPopoverBlockProps> = ({
         .writeText(url)
         .then(() => {
           setCopyTitle("Copied!")
-          setTimeout(() => {
-            setCopyTitle("Copy")
-          }, 1000)
+          setTimeout(() => setCopyTitle("Copy"), 1000)
         })
         .catch(console.error)
     },

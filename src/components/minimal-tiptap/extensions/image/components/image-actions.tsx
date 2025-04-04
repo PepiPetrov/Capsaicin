@@ -84,12 +84,12 @@ ActionButton.displayName = "ActionButton"
 
 type ActionKey = "onView" | "onDownload" | "onCopy" | "onCopyLink"
 
-const ActionItems: {
+const ActionItems: Array<{
   key: ActionKey
   icon: React.ReactNode
   tooltip: string
   isLink?: boolean
-}[] = [
+}> = [
   {
     key: "onView",
     icon: <SizeIcon className="size-4" />,
@@ -139,18 +139,14 @@ export const ImageActions: React.FC<ImageActionsProps> = React.memo(
               <ActionButton
                 icon={<DotsHorizontalIcon className="size-4" />}
                 tooltip="Open menu"
-                onClick={(e) => {
-                  e.preventDefault()
-                }}
+                onClick={(e) => e.preventDefault()}
               />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
               {filteredActions.map(({ key, icon, tooltip }) => (
                 <DropdownMenuItem
                   key={key}
-                  onClick={(e) => {
-                    handleAction(e, actions[key])
-                  }}
+                  onClick={(e) => handleAction(e, actions[key])}
                 >
                   <div className="flex flex-row items-center gap-2">
                     {icon}
@@ -166,9 +162,7 @@ export const ImageActions: React.FC<ImageActionsProps> = React.memo(
               key={key}
               icon={icon}
               tooltip={tooltip}
-              onClick={(e) => {
-                handleAction(e, actions[key])
-              }}
+              onClick={(e) => handleAction(e, actions[key])}
             />
           ))
         )}

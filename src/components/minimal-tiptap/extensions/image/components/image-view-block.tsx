@@ -91,9 +91,8 @@ export const ImageViewBlock: React.FC<NodeViewProps> = ({
       editor,
       node,
       src: imageState.src,
-      onViewClick: (isZoomed) => {
-        setImageState((prev) => ({ ...prev, isZoomed }))
-      },
+      onViewClick: (isZoomed) =>
+        setImageState((prev) => ({ ...prev, isZoomed })),
     })
 
   const {
@@ -259,9 +258,9 @@ export const ImageViewBlock: React.FC<NodeViewProps> = ({
 
               <ControlledZoom
                 isZoomed={imageState.isZoomed}
-                onZoomChange={() => {
+                onZoomChange={() =>
                   setImageState((prev) => ({ ...prev, isZoomed: false }))
-                }}
+                }
               >
                 <img
                   className={cn(

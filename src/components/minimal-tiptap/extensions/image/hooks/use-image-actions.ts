@@ -11,7 +11,7 @@ interface UseImageActionsProps {
   onViewClick: (value: boolean) => void
 }
 
-export interface ImageActionHandlers {
+export type ImageActionHandlers = {
   onView?: () => void
   onDownload?: () => void
   onCopy?: () => void

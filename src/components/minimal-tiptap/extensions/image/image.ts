@@ -178,7 +178,7 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
 
   addOptions() {
     return {
-      ...this.parent(),
+      ...this.parent?.(),
       allowedMimeTypes: [],
       maxFileSize: 0,
       uploadFn: undefined,
@@ -247,16 +247,17 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
                       fileName: image.src.name,
                     },
                   }
-                }
-                return {
-                  type: this.type.name,
-                  attrs: {
-                    id: randomId(),
-                    src: image.src,
-                    alt: image.alt,
-                    title: image.title,
-                    fileName: null,
-                  },
+                } else {
+                  return {
+                    type: this.type.name,
+                    attrs: {
+                      id: randomId(),
+                      src: image.src,
+                      alt: image.alt,
+                      title: image.title,
+                      fileName: null,
+                    },
+                  }
                 }
               })
             )

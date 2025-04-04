@@ -4,7 +4,7 @@ import { common, createLowlight } from "lowlight"
 export const CodeBlockLowlight = TiptapCodeBlockLowlight.extend({
   addOptions() {
     return {
-      ...this.parent(),
+      ...this.parent?.(),
       lowlight: createLowlight(common),
       defaultLanguage: null,
       HTMLAttributes: {

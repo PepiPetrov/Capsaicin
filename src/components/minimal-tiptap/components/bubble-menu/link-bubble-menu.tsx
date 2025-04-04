@@ -25,9 +25,7 @@ export const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
 
   const updateLinkState = React.useCallback(() => {
     const { from, to } = editor.state.selection
-    const attrs = editor.getAttributes("link") as Partial<LinkAttributes>
-    const href = attrs.href ?? ""
-    const target = attrs.target ?? ""
+    const { href, target } = editor.getAttributes("link")
     const text = editor.state.doc.textBetween(from, to, " ")
 
     setLinkAttrs({ href, target })
@@ -66,7 +64,7 @@ export const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
         .extendMarkRange("link")
         .insertContent({
           type: "text",
-          text: text ?? url,
+          text: text || url,
           marks: [
             {
               type: "link",
@@ -97,9 +95,7 @@ export const LinkBubbleMenu: React.FC<LinkBubbleMenuProps> = ({ editor }) => {
       shouldShow={shouldShow}
       tippyOptions={{
         placement: "bottom-start",
-        onHidden: () => {
-          setShowEdit(false)
-        },
+        onHidden: () => setShowEdit(false),
       }}
     >
       {showEdit ? (
