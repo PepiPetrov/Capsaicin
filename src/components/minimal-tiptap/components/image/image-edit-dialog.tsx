@@ -43,12 +43,7 @@ const ImageEditDialog = ({ editor, size, variant }: ImageEditDialogProps) => {
             Upload an image from your computer
           </DialogDescription>
         </DialogHeader>
-        <ImageEditBlock
-          editor={editor}
-          close={() => {
-            setOpen(false)
-          }}
-        />
+        <ImageEditBlock editor={editor} close={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   )

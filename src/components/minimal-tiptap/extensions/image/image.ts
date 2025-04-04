@@ -1,19 +1,13 @@
-import type { ImageOptions } from "@tiptap/extension-image"
-import { Image as TiptapImage } from "@tiptap/extension-image"
-import type { Attrs } from "@tiptap/pm/model"
-import { ReplaceStep } from "@tiptap/pm/transform"
-import type { Editor } from "@tiptap/react"
-import { ReactNodeViewRenderer } from "@tiptap/react"
+import type { ImageOptions } from '@tiptap/extension-image'
+import { Image as TiptapImage } from '@tiptap/extension-image'
+import type { Editor } from '@tiptap/react'
+import { ReactNodeViewRenderer } from '@tiptap/react'
+import { ImageViewBlock } from './components/image-view-block'
+import { filterFiles, randomId, type FileError, type FileValidationOptions } from '../../utils'
+import { ReplaceStep } from '@tiptap/pm/transform'
+import type { Attrs } from '@tiptap/pm/model'
 
-import {
-  filterFiles,
-  randomId,
-  type FileError,
-  type FileValidationOptions,
-} from "../../utils"
-import { ImageViewBlock } from "./components/image-view-block"
-
-type ImageAction = "download" | "copyImage" | "copyLink"
+type ImageAction = 'download' | 'copyImage' | 'copyLink'
 
 interface DownloadImageCommandProps {
   src: string
@@ -31,35 +25,22 @@ export type UploadReturnType =
       src: string
     }
 
-interface CustomImageOptions
-  extends ImageOptions,
-    Omit<FileValidationOptions, "allowBase64"> {
+interface CustomImageOptions extends ImageOptions, Omit<FileValidationOptions, 'allowBase64'> {
   uploadFn?: (file: File, editor: Editor) => Promise<UploadReturnType>
   onImageRemoved?: (props: Attrs) => void
   onActionSuccess?: (props: ImageActionProps) => void
   onActionError?: (error: Error, props: ImageActionProps) => void
-  downloadImage?: (
-    props: ImageActionProps,
-    options: CustomImageOptions
-  ) => Promise<void>
-  copyImage?: (
-    props: ImageActionProps,
-    options: CustomImageOptions
-  ) => Promise<void>
-  copyLink?: (
-    props: ImageActionProps,
-    options: CustomImageOptions
-  ) => Promise<void>
+  downloadImage?: (props: ImageActionProps, options: CustomImageOptions) => Promise<void>
+  copyImage?: (props: ImageActionProps, options: CustomImageOptions) => Promise<void>
+  copyLink?: (props: ImageActionProps, options: CustomImageOptions) => Promise<void>
   onValidationError?: (errors: FileError[]) => void
   onToggle?: (editor: Editor, files: File[], pos: number) => void
 }
 
-declare module "@tiptap/react" {
+declare module '@tiptap/react' {
   interface Commands<ReturnType> {
     setImages: {
-      setImages: (
-        attrs: { src: string | File; alt?: string; title?: string }[]
-      ) => ReturnType
+      setImages: (attrs: { src: string | File; alt?: string; title?: string }[]) => ReturnType
     }
     downloadImage: {
       downloadImage: (attrs: DownloadImageCommandProps) => ReturnType
@@ -81,14 +62,14 @@ const handleError = (
   props: ImageActionProps,
   errorHandler?: (error: Error, props: ImageActionProps) => void
 ): void => {
-  const typedError = error instanceof Error ? error : new Error("Unknown error")
+  const typedError = error instanceof Error ? error : new Error('Unknown error')
   errorHandler?.(typedError, props)
 }
 
 const handleDataUrl = (src: string): { blob: Blob; extension: string } => {
-  const [header, base64Data] = src.split(",")
-  const mimeType = header.split(":")[1].split(";")[0]
-  const extension = mimeType.split("/")[1]
+  const [header, base64Data] = src.split(',')
+  const mimeType = header.split(':')[1].split(';')[0]
+  const extension = mimeType.split('/')[1]
   const byteCharacters = atob(base64Data)
   const byteArray = new Uint8Array(byteCharacters.length)
   for (let i = 0; i < byteCharacters.length; i++) {
@@ -98,29 +79,21 @@ const handleDataUrl = (src: string): { blob: Blob; extension: string } => {
   return { blob, extension }
 }
 
-const handleImageUrl = async (
-  src: string
-): Promise<{ blob: Blob; extension: string }> => {
+const handleImageUrl = async (src: string): Promise<{ blob: Blob; extension: string }> => {
   const response = await fetch(src)
-  if (!response.ok) throw new Error("Failed to fetch image")
+  if (!response.ok) throw new Error('Failed to fetch image')
   const blob = await response.blob()
   const extension = blob.type.split(/\/|\+/)[1]
   return { blob, extension }
 }
 
-const fetchImageBlob = async (
-  src: string
-): Promise<{ blob: Blob; extension: string }> => {
-  return src.startsWith("data:") ? handleDataUrl(src) : handleImageUrl(src)
+const fetchImageBlob = async (src: string): Promise<{ blob: Blob; extension: string }> => {
+  return src.startsWith('data:') ? handleDataUrl(src) : handleImageUrl(src)
 }
 
-const saveImage = async (
-  blob: Blob,
-  name: string,
-  extension: string
-): Promise<void> => {
+const saveImage = async (blob: Blob, name: string, extension: string): Promise<void> => {
   const imageURL = URL.createObjectURL(blob)
-  const link = document.createElement("a")
+  const link = document.createElement('a')
   link.href = imageURL
   link.download = `${name}.${extension}`
   document.body.appendChild(link)
@@ -129,47 +102,38 @@ const saveImage = async (
   URL.revokeObjectURL(imageURL)
 }
 
-const downloadImage = async (
-  props: ImageActionProps,
-  options: CustomImageOptions
-): Promise<void> => {
+const downloadImage = async (props: ImageActionProps, options: CustomImageOptions): Promise<void> => {
   const { src, alt } = props
-  const potentialName = alt || "image"
+  const potentialName = alt || 'image'
 
   try {
     const { blob, extension } = await fetchImageBlob(src)
     await saveImage(blob, potentialName, extension)
-    options.onActionSuccess?.({ ...props, action: "download" })
+    options.onActionSuccess?.({ ...props, action: 'download' })
   } catch (error) {
-    handleError(error, { ...props, action: "download" }, options.onActionError)
+    handleError(error, { ...props, action: 'download' }, options.onActionError)
   }
 }
 
-const copyImage = async (
-  props: ImageActionProps,
-  options: CustomImageOptions
-): Promise<void> => {
+const copyImage = async (props: ImageActionProps, options: CustomImageOptions): Promise<void> => {
   const { src } = props
   try {
     const res = await fetch(src)
     const blob = await res.blob()
     await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
-    options.onActionSuccess?.({ ...props, action: "copyImage" })
+    options.onActionSuccess?.({ ...props, action: 'copyImage' })
   } catch (error) {
-    handleError(error, { ...props, action: "copyImage" }, options.onActionError)
+    handleError(error, { ...props, action: 'copyImage' }, options.onActionError)
   }
 }
 
-const copyLink = async (
-  props: ImageActionProps,
-  options: CustomImageOptions
-): Promise<void> => {
+const copyLink = async (props: ImageActionProps, options: CustomImageOptions): Promise<void> => {
   const { src } = props
   try {
     await navigator.clipboard.writeText(src)
-    options.onActionSuccess?.({ ...props, action: "copyLink" })
+    options.onActionSuccess?.({ ...props, action: 'copyLink' })
   } catch (error) {
-    handleError(error, { ...props, action: "copyLink" }, options.onActionError)
+    handleError(error, { ...props, action: 'copyLink' }, options.onActionError)
   }
 }
 
@@ -178,52 +142,52 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
 
   addOptions() {
     return {
-      ...this.parent(),
+      ...this.parent?.(),
       allowedMimeTypes: [],
       maxFileSize: 0,
       uploadFn: undefined,
       onToggle: undefined,
       downloadImage: undefined,
       copyImage: undefined,
-      copyLink: undefined,
+      copyLink: undefined
     }
   },
 
   addAttributes() {
     return {
       src: {
-        default: null,
+        default: null
       },
       alt: {
-        default: null,
+        default: null
       },
       title: {
-        default: null,
+        default: null
       },
       id: {
-        default: null,
+        default: null
       },
       width: {
-        default: null,
+        default: null
       },
       height: {
-        default: null,
+        default: null
       },
       fileName: {
-        default: null,
-      },
+        default: null
+      }
     }
   },
 
   addCommands() {
     return {
       setImages:
-        (attrs) =>
+        attrs =>
         ({ commands }) => {
           const [validImages, errors] = filterFiles(attrs, {
             allowedMimeTypes: this.options.allowedMimeTypes,
             maxFileSize: this.options.maxFileSize,
-            allowBase64: this.options.allowBase64,
+            allowBase64: this.options.allowBase64
           })
 
           if (errors.length > 0 && this.options.onValidationError) {
@@ -232,7 +196,7 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
 
           if (validImages.length > 0) {
             return commands.insertContent(
-              validImages.map((image) => {
+              validImages.map(image => {
                 if (image.src instanceof File) {
                   const blobUrl = URL.createObjectURL(image.src)
                   const id = randomId()
@@ -244,19 +208,20 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
                       src: blobUrl,
                       alt: image.alt,
                       title: image.title,
-                      fileName: image.src.name,
-                    },
+                      fileName: image.src.name
+                    }
                   }
-                }
-                return {
-                  type: this.type.name,
-                  attrs: {
-                    id: randomId(),
-                    src: image.src,
-                    alt: image.alt,
-                    title: image.title,
-                    fileName: null,
-                  },
+                } else {
+                  return {
+                    type: this.type.name,
+                    attrs: {
+                      id: randomId(),
+                      src: image.src,
+                      alt: image.alt,
+                      title: image.title,
+                      fileName: null
+                    }
+                  }
                 }
               })
             )
@@ -265,30 +230,30 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
           return false
         },
 
-      downloadImage: (attrs) => () => {
+      downloadImage: attrs => () => {
         const downloadFunc = this.options.downloadImage || downloadImage
-        void downloadFunc({ ...attrs, action: "download" }, this.options)
+        void downloadFunc({ ...attrs, action: 'download' }, this.options)
         return true
       },
 
-      copyImage: (attrs) => () => {
+      copyImage: attrs => () => {
         const copyImageFunc = this.options.copyImage || copyImage
-        void copyImageFunc({ ...attrs, action: "copyImage" }, this.options)
+        void copyImageFunc({ ...attrs, action: 'copyImage' }, this.options)
         return true
       },
 
-      copyLink: (attrs) => () => {
+      copyLink: attrs => () => {
         const copyLinkFunc = this.options.copyLink || copyLink
-        void copyLinkFunc({ ...attrs, action: "copyLink" }, this.options)
+        void copyLinkFunc({ ...attrs, action: 'copyLink' }, this.options)
         return true
       },
 
       toggleImage:
         () =>
         ({ editor }) => {
-          const input = document.createElement("input")
-          input.type = "file"
-          input.accept = this.options.allowedMimeTypes.join(",")
+          const input = document.createElement('input')
+          input.type = 'file'
+          input.accept = this.options.allowedMimeTypes.join(',')
           input.onchange = () => {
             const files = input.files
             if (!files) return
@@ -296,7 +261,7 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
             const [validImages, errors] = filterFiles(Array.from(files), {
               allowedMimeTypes: this.options.allowedMimeTypes,
               maxFileSize: this.options.maxFileSize,
-              allowBase64: this.options.allowBase64,
+              allowBase64: this.options.allowBase64
             })
 
             if (errors.length > 0 && this.options.onValidationError) {
@@ -307,11 +272,7 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
             if (validImages.length === 0) return false
 
             if (this.options.onToggle) {
-              this.options.onToggle(
-                editor,
-                validImages,
-                editor.state.selection.from
-              )
+              this.options.onToggle(editor, validImages, editor.state.selection.from)
             }
 
             return false
@@ -319,20 +280,20 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
 
           input.click()
           return true
-        },
+        }
     }
   },
 
   onTransaction({ transaction }) {
-    transaction.steps.forEach((step) => {
+    transaction.steps.forEach(step => {
       if (step instanceof ReplaceStep && step.slice.size === 0) {
         const deletedPages = transaction.before.content.cut(step.from, step.to)
 
-        deletedPages.forEach((node) => {
-          if (node.type.name === "image") {
+        deletedPages.forEach(node => {
+          if (node.type.name === 'image') {
             const attrs = node.attrs
 
-            if (attrs.src.startsWith("blob:")) {
+            if (attrs.src.startsWith('blob:')) {
               URL.revokeObjectURL(attrs.src)
             }
 
@@ -345,7 +306,7 @@ export const Image = TiptapImage.extend<CustomImageOptions>({
 
   addNodeView() {
     return ReactNodeViewRenderer(ImageViewBlock, {
-      className: "block-node",
+      className: 'block-node'
     })
-  },
+  }
 })

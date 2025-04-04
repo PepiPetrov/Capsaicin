@@ -1,32 +1,28 @@
-import * as React from "react"
-import type { Editor } from "@tiptap/react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import * as React from 'react'
+import type { Editor } from '@tiptap/react'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 
 interface ImageEditBlockProps {
   editor: Editor
   close: () => void
 }
 
-export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
-  editor,
-  close,
-}) => {
+export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({ editor, close }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const [link, setLink] = React.useState("")
+  const [link, setLink] = React.useState('')
 
   const handleClick = React.useCallback(() => {
     fileInputRef.current?.click()
   }, [])
 
   const handleFile = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files
       if (!files?.length) return
 
-      const insertImages = () => {
+      const insertImages = async () => {
         const contentBucket = []
         const filesArray = Array.from(files)
 
@@ -37,7 +33,7 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
         editor.commands.setImages(contentBucket)
       }
 
-      insertImages()
+      await insertImages()
       close()
     },
     [editor, close]
@@ -68,9 +64,7 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
             placeholder="https://example.com"
             value={link}
             className="grow"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setLink(e.target.value)
-            }}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLink(e.target.value)}
           />
           <Button type="submit" className="ml-2">
             Submit
@@ -80,14 +74,7 @@ export const ImageEditBlock: React.FC<ImageEditBlockProps> = ({
       <Button type="button" className="w-full" onClick={handleClick}>
         Upload from your computer
       </Button>
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        multiple
-        className="hidden"
-        onChange={handleFile}
-      />
+      <input type="file" accept="image/*" ref={fileInputRef} multiple className="hidden" onChange={handleFile} />
     </form>
   )
 }
