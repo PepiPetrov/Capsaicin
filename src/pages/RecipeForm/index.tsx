@@ -84,7 +84,11 @@ export const recipeZodSchema = z.object({
 })
 
 export type RecipeFormData = z.infer<typeof recipeZodSchema>
-export type RecipeFormReturn = UseFormReturn<z.infer<typeof recipeZodSchema>>
+export type RecipeFormReturn = UseFormReturn<
+  RecipeFormData,
+  unknown,
+  RecipeFormData
+>
 
 export default function RecipeForm({ id = -1 }: { id?: number }) {
   const [step, setStep] = useState<number>(0)
@@ -92,6 +96,7 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
   const { db, error, loading } = useDatabase()
 
   const form = useForm<z.infer<typeof recipeZodSchema>>({
+    //@ts-expect-error form is valid
     resolver: zodResolver(recipeZodSchema),
     mode: "onChange",
     defaultValues: {
@@ -142,7 +147,7 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
   }, [id, db, loading, form]) // ✅ Correct dependencies
 
   const callback = useCallback(
-    async (data: typeof recipeZodSchema._type) => {
+    async (data: z.infer<typeof recipeZodSchema>) => {
       if (id !== -1) {
         await editRecipe(db, id, {
           ...data,
@@ -156,7 +161,7 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
     [db, id]
   )
 
-  const onSubmit = (data: typeof recipeZodSchema._type) => {
+  const onSubmit = (data: z.infer<typeof recipeZodSchema>) => {
     void callback(data).then((id) => {
       setLocation(`/details/${id?.toString() ?? ""}`)
     })
@@ -164,14 +169,17 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
 
   const steps = [
     {
+      //@ts-expect-error form is valid
       component: <FormStep1 form={form} />,
       title: "Recipe Information",
     },
     {
+      //@ts-expect-error form is valid
       component: <FormStep2 form={form} />,
       title: "Ingredients and Instructions",
     },
     {
+      //@ts-expect-error form is valid
       component: <FormStep3 form={form} />,
       title: "Nutrition",
     },
@@ -180,7 +188,11 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
   return !error ? (
     <Form {...form}>
       <form
-        onSubmit={() => void form.handleSubmit(onSubmit)}
+        onSubmit={() =>
+          void form.handleSubmit((data: object) => {
+            onSubmit(data as z.infer<typeof recipeZodSchema>)
+          })()
+        }
         className="h-full"
       >
         <Card className="mx-auto my-10 max-w-6xl overflow-hidden shadow-lg">

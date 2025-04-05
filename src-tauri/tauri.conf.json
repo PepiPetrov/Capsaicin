@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "capsaicin",
+  "productName": "Capsaicin",
   "version": "0.1.0",
   "identifier": "com.capsaicin.prod",
   "build": {

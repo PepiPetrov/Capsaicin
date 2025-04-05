@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -16,47 +16,39 @@ export const TagInput = ({
   placeholder = "× Add categories...",
 }: TagInputProps) => {
   const [inputValue, setInputValue] = useState("")
-  const [tags, setTags] = useState<string[]>([])
 
-  // Sync tags with form value
-  useEffect(() => {
-    if (value) {
-      setTags(
-        value
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      )
-    } else {
-      setTags([])
-    }
-  }, [value])
-
-  // Update form value when tags change
-  useEffect(() => {
-    onChange(tags.join(", "))
-  }, [tags, onChange])
+  const tags = value
+    ? value
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : []
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (["Enter", ","].includes(e.key)) {
       e.preventDefault()
       addTag()
+    } else if (e.key === "Backspace" && inputValue === "" && tags.length > 0) {
+      e.preventDefault()
+      removeTag(tags.length - 1)
     }
   }
 
   const addTag = () => {
-    if (inputValue.trim()) {
-      setTags([...tags, inputValue.trim()])
-      setInputValue("")
+    const newTag = inputValue.trim()
+    if (newTag && !tags.includes(newTag)) {
+      onChange([...tags, newTag].join(", "))
     }
+    setInputValue("")
   }
 
   const removeTag = (index: number) => {
-    setTags(tags.filter((_, i) => i !== index))
+    const newTags = tags.filter((_, i) => i !== index)
+    onChange(newTags.join(", "))
   }
 
   const clearAll = () => {
-    setTags([])
+    onChange("")
     setInputValue("")
   }
 
