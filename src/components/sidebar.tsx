@@ -1,3 +1,4 @@
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons"
 import { Home, PlusIcon } from "lucide-react"
 
 import {
@@ -23,6 +24,11 @@ const items = [
     title: "Create",
     url: "#create",
     icon: PlusIcon,
+  },
+  {
+    title: "Search",
+    url: "#search",
+    icon: MagnifyingGlassIcon,
   },
 ]
 

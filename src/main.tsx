@@ -11,6 +11,7 @@ import Layout from "./components/layout"
 import CreatePage from "./pages/CreatePage"
 import DetailsPage from "./pages/DetailsPage"
 import EditPage from "./pages/EditPage"
+import SearchPage from "./pages/SearchPage"
 
 ReactDOM.createRoot(
   document.getElementById("root") ?? new HTMLElement()
@@ -44,6 +45,12 @@ ReactDOM.createRoot(
               <EditPage id={parseInt(params.id, 10)} />
             </Layout>
           )}
+        </Route>
+
+        <Route path="/search">
+          <Layout>
+            <SearchPage />
+          </Layout>
         </Route>
       </Router>
     </Router>

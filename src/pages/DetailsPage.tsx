@@ -81,25 +81,22 @@ const DeleteModal = ({ id, db }: { id: number; db: Database | null }) => {
   )
 }
 
-interface RecipeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  alt?: string
-  className?: string
-}
-
-const RecipeImage: React.FC<RecipeImageProps> = ({
+const RecipeImage = ({
   src,
   alt,
   className = "",
   ...props
-}) => {
+}: React.ImgHTMLAttributes<HTMLImageElement>) => {
   const [error, setError] = useState(false)
 
   return error ? (
     <div
-      className={`flex h-full w-full items-center justify-center rounded-xl bg-gray-200 ${className}`}
+      className={`flex h-full w-full items-center justify-center rounded-xl bg-gray-200 dark:bg-gray-800 ${className}`}
     >
-      <ImageOff size={40} className="text-gray-500" />
-      <span className="ml-2 text-gray-500">{alt ?? "Image not available"}</span>
+      <ImageOff size={40} className="text-gray-500 dark:text-gray-400" />
+      <span className="ml-2 text-gray-500 dark:text-gray-400">
+        {alt ?? "Image not available"}
+      </span>
     </div>
   ) : (
     <img
@@ -109,7 +106,7 @@ const RecipeImage: React.FC<RecipeImageProps> = ({
       onError={() => {
         setError(true)
       }}
-      {...props} // Allows passing additional attributes (e.g., loading, style)
+      {...props}
     />
   )
 }
@@ -117,28 +114,27 @@ const RecipeImage: React.FC<RecipeImageProps> = ({
 export default function DetailsPage({ id }: { id: number }) {
   const { db } = useDatabase()
   const [recipe, setRecipe] = useState<FullRecipeFetch | null>(null)
-
   const [, setLocation] = useLocation()
+  const [scaleInput, setScaleInput] = useState<string>("1")
 
   useEffect(() => {
-    if (!id) return // ✅ Prevents running with undefined id
+    if (!id) return
 
     const fetchRecipe = async () => {
       const recipeId = Number(id)
-      if (isNaN(recipeId)) return // ✅ Prevents invalid number conversion
+      if (isNaN(recipeId)) return
 
       const fetchedRecipe = await fetchFullRecipeById(db, recipeId)
-      setRecipe(fetchedRecipe) // ✅ Updates state properly
+      setRecipe(fetchedRecipe)
     }
 
     void fetchRecipe()
-  }, [id, db]) // ✅ Correct dependencies
+  }, [id, db])
 
   return (
-    <div className="mx-auto mt-16 h-auto w-11/12 max-w-6xl overflow-auto p-4">
+    <div className="mx-auto mt-16 w-11/12 max-w-6xl overflow-auto p-4">
       {/* Header Section */}
-      <div className="flex flex-col items-center gap-6 rounded-xl bg-gray-900 p-6 shadow-lg md:flex-row">
-        {/* Image */}
+      <div className="flex flex-col items-center gap-6 rounded-xl bg-white p-6 shadow-lg dark:bg-gray-900 md:flex-row">
         <div className="w-full md:w-1/3">
           <RecipeImage
             src={recipe?.recipe.title_image}
@@ -147,10 +143,11 @@ export default function DetailsPage({ id }: { id: number }) {
           />
         </div>
 
-        {/* Title & Details */}
         <div className="w-full space-y-2 md:w-2/3">
-          <h1 className="text-2xl font-semibold">{recipe?.recipe.name}</h1>
-          <p className="text-sm text-gray-400">
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+            {recipe?.recipe.name}
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {recipe?.recipe.category.split(",").length === 1
               ? "Category"
               : "Categories"}
@@ -166,7 +163,7 @@ export default function DetailsPage({ id }: { id: number }) {
             </Badge>
           </div>
 
-          <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+          <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
             <span>Prep: {recipe?.recipe.prep_time} mins</span>
             <span>Cook: {recipe?.recipe.cook_time} mins</span>
             <span>Servings: {recipe?.recipe.servings}</span>
@@ -185,18 +182,20 @@ export default function DetailsPage({ id }: { id: number }) {
         </div>
       </div>
 
-      {/* Nutrition & Ingredients Grid */}
+      {/* Nutrition & Ingredients */}
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Nutrition Section */}
         {recipe?.nutrition && (
-          <div className="rounded-xl bg-gray-900 p-4 shadow">
-            <h2 className="mb-3 text-lg font-bold">Nutrition Info</h2>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="rounded-xl bg-white p-4 shadow dark:bg-gray-900">
+            <h2 className="mb-3 text-lg font-bold text-gray-800 dark:text-gray-100">
+              Nutrition Info
+            </h2>
+            <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
               <div>
                 <span className="font-semibold">Calories:</span>{" "}
-                {`${new Intl.NumberFormat("pl-PL", {
-                  useGrouping: true,
-                }).format(recipe.nutrition.calories)} cal`}
+                {new Intl.NumberFormat("pl-PL").format(
+                  recipe.nutrition.calories
+                )}{" "}
+                cal
               </div>
               <div className="flex flex-col">
                 <div>
@@ -216,18 +215,49 @@ export default function DetailsPage({ id }: { id: number }) {
           </div>
         )}
 
-        {/* Ingredients Section */}
         {recipe?.ingredients && (
-          <div className="rounded-xl bg-gray-900 p-4 shadow">
-            <h2 className="mb-3 text-lg font-bold">Ingredients</h2>
-            <ul className="space-y-2">
+          <div className="rounded-xl bg-white p-4 shadow dark:bg-gray-900">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                Ingredients
+              </h2>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <label htmlFor="scale" className="whitespace-nowrap">
+                  Scale:
+                </label>
+                <input
+                  id="scale"
+                  type="number"
+                  min={0.1}
+                  step={0.1}
+                  inputMode="decimal"
+                  value={scaleInput}
+                  onChange={(e) => {
+                    setScaleInput(e.target.value)
+                  }}
+                  className="w-16 rounded border border-gray-300 bg-white px-2 py-1 text-right text-sm shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                />
+                <button
+                  onClick={() => {
+                    setScaleInput("1")
+                  }}
+                >
+                  <span>x</span>
+                </button>
+              </div>
+            </div>
+
+            <ul className="space-y-2 text-gray-800 dark:text-gray-200">
               {recipe.ingredients.map((i) => (
                 <li key={i.id} className="flex items-center gap-3">
                   <Checkbox className="h-5 w-5" />
                   <span>
-                    <span className="font-semibold">
-                      {i.quantity} {i.unit}
-                    </span>{" "}
+                    <strong>
+                      {Number(i.quantity * (parseFloat(scaleInput) || 1))
+                        .toFixed(2)
+                        .replace(/\.00$/, "")}{" "}
+                      {i.unit}
+                    </strong>{" "}
                     {i.ingredient}
                   </span>
                 </li>
@@ -237,19 +267,23 @@ export default function DetailsPage({ id }: { id: number }) {
         )}
       </div>
 
-      {/* Directions Section */}
+      {/* Directions */}
       {recipe?.directions && (
-        <div className="mt-6 rounded-xl bg-gray-900 p-4 shadow">
-          <h2 className="mb-3 text-lg font-bold">Directions</h2>
-          <ol className="space-y-3">
+        <div className="mt-6 rounded-xl bg-white p-4 shadow dark:bg-gray-900">
+          <h2 className="mb-3 text-lg font-bold text-gray-800 dark:text-gray-100">
+            Directions
+          </h2>
+          <ol className="space-y-3 text-gray-800 dark:text-gray-200">
             {recipe.directions.map((step, i) => (
               <li key={step.id} className="flex gap-3">
-                <div className="flex min-w-6 items-start pt-1">
-                  <span className="font-semibold text-blue-400">{i + 1}.</span>
+                <div className="min-w-6 pt-1">
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    {i + 1}.
+                  </span>
                 </div>
                 <div className="flex-1">
                   {step.title && (
-                    <h3 className="font-semibold text-blue-400">
+                    <h3 className="font-semibold text-blue-600 dark:text-blue-400">
                       {step.title}
                     </h3>
                   )}
@@ -261,11 +295,13 @@ export default function DetailsPage({ id }: { id: number }) {
         </div>
       )}
 
-      {/* Equipment Section */}
-      {recipe?.equipment && (
-        <div className="mt-6 rounded-xl bg-gray-900 p-4 shadow">
-          <h2 className="mb-3 text-lg font-bold">Equipment</h2>
-          <ul className="grid grid-cols-2 gap-2 md:grid-cols-3">
+      {/* Equipment */}
+      {recipe?.equipment && recipe.equipment.length > 0 && (
+        <div className="mt-6 rounded-xl bg-white p-4 shadow dark:bg-gray-900">
+          <h2 className="mb-3 text-lg font-bold text-gray-800 dark:text-gray-100">
+            Equipment
+          </h2>
+          <ul className="grid grid-cols-2 gap-2 text-gray-800 dark:text-gray-200 md:grid-cols-3">
             {recipe.equipment.map((item) => (
               <li key={item.id} className="flex items-center gap-2">
                 <Checkbox className="h-5 w-5" />

@@ -1,11 +1,12 @@
 import { Recipe } from "@/db/types"
+import { AlertCircle } from "lucide-react"
 import { useLocation } from "wouter"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function RecipeCard({ recipe }: { recipe: Recipe }) {
+export function RecipeCard({ recipe }: { recipe: Recipe }) {
   const [, setLocation] = useLocation()
   return (
     <Card key={recipe.id} className="rounded-xl shadow-lg">
@@ -17,12 +18,14 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         />
       </CardHeader>
       <CardContent className="p-4">
-        <CardTitle className="text-lg font-semibold">{recipe.name}</CardTitle>
+        <CardTitle className="w-full break-words text-lg font-semibold">
+          {recipe.name}
+        </CardTitle>
         <p className="mb-3 text-sm text-gray-500">
           Category: {recipe.category}
         </p>
         <div className="mb-3 flex items-center gap-2">
-          <Badge variant="secondary">{"⭐".repeat(recipe.rating + 1)}</Badge>
+          <Badge variant="secondary">{"⭐".repeat(recipe.rating)}</Badge>
           {recipe.favourite ? (
             <Badge variant="default">❤️ Favorite</Badge>
           ) : null}
@@ -40,5 +43,41 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         </Button>
       </CardContent>
     </Card>
+  )
+}
+
+export function RecipeList({
+  recipes,
+  createNew = false,
+}: {
+  recipes: Recipe[]
+  createNew?: boolean
+}) {
+  return (
+    <div className="scroll">
+      {recipes.length > 0 ? (
+        <div className="grid w-full grid-cols-1 gap-6 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {recipes.map((recipe) => (
+            <RecipeCard recipe={recipe} key={recipe.id} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex h-[60vh] flex-col items-center justify-center text-center">
+          <AlertCircle size={48} className="text-gray-400" />
+          <h2 className="mt-4 text-xl font-semibold">No recipes found</h2>
+          {createNew ? (
+            <>
+              {" "}
+              <p className="text-gray-500">
+                Try adding a new recipe to get started.
+              </p>
+              <a href="#create">
+                <Button className="mt-4">Add Recipe</Button>
+              </a>
+            </>
+          ) : null}
+        </div>
+      )}
+    </div>
   )
 }
