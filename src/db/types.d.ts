@@ -4,7 +4,7 @@ export interface Recipe {
   category: string
   title_image: string
   rating: number
-  favourite: number
+  favorite: boolean
   prep_time: number
   cook_time: number
   servings: number
@@ -48,4 +48,14 @@ export interface FullRecipeFetch {
   directions: Direction[]
   equipment: Equipment[]
   nutrition: Nutrition
+}
+
+export interface DailyMealPlan {
+  id?: number
+  day: string // format: YYYY-MM-DD
+  breakfast_id?: number | null
+  lunch_id?: number | null
+  dinner_id?: number | null
+  created_at?: string
+  updated_at?: string
 }

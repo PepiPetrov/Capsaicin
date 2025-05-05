@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 import { fetchAllRecipes } from "@/db/functions"
 import { Recipe } from "@/db/types"
 
-import useDatabase from "@/lib/useDatabase"
+import useDatabase from "@/hooks/use-database"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { RecipeList } from "@/components/RecipeCard"
@@ -12,12 +12,13 @@ function processColumnName(col: string): string {
   return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1)
 }
 
-type SearchableRecipe = Omit<Omit<Recipe, "created_at">, "updated_at">
+const EXCLUDED_FIELDS: (keyof Recipe)[] = ["id", "created_at", "updated_at"]
+type RecipeExcludedKeys = "id" | "created_at" | "updated_at"
 
 export default function SearchPage() {
   const { db } = useDatabase()
-  const [recipes, setRecipes] = useState<SearchableRecipe[]>([])
-  const [filteredRecipes, setFilteredRecipes] = useState<SearchableRecipe[]>([])
+  const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([])
 
   const [columnTypes, setColumnTypes] = useState<
     Record<string, "string" | "number" | "boolean">
@@ -25,30 +26,37 @@ export default function SearchPage() {
 
   const [filters, setFilters] = useState<
     {
-      column: keyof SearchableRecipe
+      column: keyof Recipe
       value: string
       op?: "eq" | "gt" | "gte" | "lt" | "lte"
     }[]
   >([])
-  const [sortBy, setSortBy] = useState<keyof SearchableRecipe>("name")
+
+  const [sortBy, setSortBy] = useState<keyof Recipe>("name")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
   const isBooleanColumn = useCallback(
-    (col: keyof SearchableRecipe) => columnTypes[col] === "boolean",
+    (col: keyof Recipe) => columnTypes[col] === "boolean",
     [columnTypes]
   )
-  const isNumericColumn = (col: keyof Recipe) => columnTypes[col] === "number"
+  const isNumericColumn = useCallback(
+    (col: keyof Recipe) => columnTypes[col] === "number",
+    [columnTypes]
+  )
 
-  const columnKeys = Object.keys(columnTypes) as (keyof SearchableRecipe)[]
+  const columnKeys = Object.keys(columnTypes).filter(
+    (key): key is keyof Recipe => !EXCLUDED_FIELDS.includes(key as keyof Recipe)
+  )
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      const result = ((await fetchAllRecipes(db)) ?? []).map((r) => {
-        // We are aiming to omit the fields
+      const result = ((await fetchAllRecipes(db)) ?? []).map(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { created_at: _, updated_at: __, ...rest } = r
-        return rest
-      })
+        ({ id, created_at: _c, updated_at: _u, ...rest }) => ({
+          ...rest,
+          id: id ?? 0, // keep id if needed by RecipeList
+        })
+      )
       setRecipes(result)
 
       if (result.length > 0) {
@@ -57,7 +65,9 @@ export default function SearchPage() {
           {}
 
         for (const key of Object.keys(sample)) {
-          const value = sample[key as keyof SearchableRecipe]
+          if (EXCLUDED_FIELDS.includes(key as keyof Recipe)) continue
+
+          const value = sample[key as Exclude<keyof Recipe, RecipeExcludedKeys>]
           if (typeof value === "boolean") inferredTypes[key] = "boolean"
           else if (typeof value === "number") inferredTypes[key] = "number"
           else inferredTypes[key] = "string"
@@ -150,7 +160,7 @@ export default function SearchPage() {
               value={f.column}
               onChange={(e) => {
                 const newFilters = [...filters]
-                newFilters[i].column = e.target.value as keyof SearchableRecipe
+                newFilters[i].column = e.target.value as keyof Recipe
                 newFilters[i].value = ""
                 setFilters(newFilters)
               }}
@@ -231,7 +241,7 @@ export default function SearchPage() {
           <select
             value={sortBy}
             onChange={(e) => {
-              setSortBy(e.target.value as keyof SearchableRecipe)
+              setSortBy(e.target.value as keyof Recipe)
             }}
             className="rounded border px-2 py-1"
           >
@@ -255,7 +265,6 @@ export default function SearchPage() {
         </div>
       </div>
       <Separator />
-
       <RecipeList recipes={filteredRecipes} />
     </>
   )

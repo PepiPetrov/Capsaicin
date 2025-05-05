@@ -1,4 +1,5 @@
 import {
+  DailyMealPlan,
   Direction,
   Equipment,
   FullRecipeFetch,
@@ -43,9 +44,7 @@ async function insertGeneric(
 ): Promise<QueryResult | null> {
   const keys = Object.keys(data).join(", ")
   const values = Object.values(data)
-  const placeholders = values
-    .map((_, index) => `?${(index + 1).toString()}`)
-    .join(", ")
+  const placeholders = values.map(() => "?").join(", ")
   return executeQuery(
     db,
     `INSERT INTO ${table} (${keys}) VALUES (${placeholders})`,
@@ -65,10 +64,10 @@ async function fetchGeneric<T>(
   )
 }
 
-async function updateGeneric(
+async function updateGeneric<T extends { id: number }>(
   db: Database | null,
   table: string,
-  data: { id: number }
+  data: T
 ): Promise<QueryResult | null> {
   const keys = Object.keys(data).filter((k) => k !== "id")
   const values = keys.map((k) => data[k as keyof { id: number }])
@@ -91,77 +90,103 @@ async function deleteGeneric(
 
 // === Recipe CRUD Operations (Using Generic CRUD Functions) ===
 export const insertRecipe = (db: Database | null, recipe: Omit<Recipe, "id">) =>
-  insertGeneric(db, "Recipe", recipe)
+  insertGeneric(db, "recipes", recipe)
 
 export const fetchRecipeById = (db: Database | null, id: number) =>
-  fetchQuery<Recipe[]>(db, `SELECT * FROM Recipe WHERE id = ?1 LIMIT 1`, [
-    id,
-  ]).then((recipes) => (recipes ? recipes[0] : null))
+  fetchQuery<Recipe[]>(db, `SELECT * FROM recipes WHERE id = ?1 LIMIT 1`, [id])
+    .then((recipes) => (recipes ? recipes[0] : null))
+    .then((r) => {
+      if (r) {
+        //@ts-ignore valid
+        if (!r.favorite || r.favorite == "false") {
+          r.favorite = false
+        } else {
+          r.favorite = true
+        }
+      }
+      return r
+    })
 
 export const fetchAllRecipes = (db: Database | null) =>
-  fetchQuery<Recipe[]>(db, "SELECT * FROM Recipe")
+  fetchQuery<Recipe[]>(db, "SELECT * FROM recipes")
 
 export const updateRecipe = (db: Database | null, recipe: Recipe) => {
-  void updateGeneric(db, "Recipe", { ...recipe, id: recipe.id ?? 0 })
+  void updateGeneric(db, "recipes", { ...recipe, id: recipe.id ?? 0 })
+}
+
+export const favoriteRecipe = async (
+  db: Database | null,
+  recipe: Recipe,
+  favorite: boolean
+): Promise<boolean> => {
+  recipe.favorite = favorite
+  const result = await updateGeneric(db, "recipes", {
+    ...recipe,
+    id: recipe.id ?? 0,
+  })
+
+  console.log(result)
+
+  return result !== null
 }
 
 export const deleteRecipe = (db: Database | null, recipe_id: number) =>
-  deleteGeneric(db, "Recipe", recipe_id)
+  deleteGeneric(db, "recipes", recipe_id)
 
 // === Ingredient CRUD Operations ===
 export const insertIngredient = (
   db: Database | null,
   ingredient: Omit<Ingredient, "id">
-) => insertGeneric(db, "Ingredients", ingredient)
+) => insertGeneric(db, "ingredients", ingredient)
 export const fetchIngredientsForRecipe = (
   db: Database | null,
   recipe_id: number
-) => fetchGeneric<Ingredient>(db, "Ingredients", recipe_id)
+) => fetchGeneric<Ingredient>(db, "ingredients", recipe_id)
 export const updateIngredient = (db: Database | null, ingredient: Ingredient) =>
-  updateGeneric(db, "Ingredients", ingredient)
+  updateGeneric(db, "ingredients", ingredient)
 export const deleteIngredient = (db: Database | null, ingredient_id: number) =>
-  deleteGeneric(db, "Ingredients", ingredient_id)
+  deleteGeneric(db, "ingredients", ingredient_id)
 
 // === Directions CRUD Operations ===
 export const insertDirection = (
   db: Database | null,
   direction: Omit<Direction, "id">
-) => insertGeneric(db, "Directions", direction)
+) => insertGeneric(db, "directions", direction)
 export const fetchDirectionsForRecipe = (
   db: Database | null,
   recipe_id: number
-) => fetchGeneric<Direction>(db, "Directions", recipe_id)
+) => fetchGeneric<Direction>(db, "directions", recipe_id)
 export const updateDirection = (db: Database | null, direction: Direction) =>
-  updateGeneric(db, "Directions", direction)
+  updateGeneric(db, "directions", direction)
 export const deleteDirection = (db: Database | null, direction_id: number) =>
-  deleteGeneric(db, "Directions", direction_id)
+  deleteGeneric(db, "directions", direction_id)
 
 // === Equipment CRUD Operations ===
 export const insertEquipment = (
   db: Database | null,
   equipment: Omit<Equipment, "id">
-) => insertGeneric(db, "Equipment", equipment)
+) => insertGeneric(db, "equipment", equipment)
 export const fetchEquipmentForRecipe = (
   db: Database | null,
   recipe_id: number
-) => fetchGeneric<Equipment>(db, "Equipment", recipe_id)
+) => fetchGeneric<Equipment>(db, "equipment", recipe_id)
 export const updateEquipment = (db: Database | null, equipment: Equipment) =>
-  updateGeneric(db, "Equipment", equipment)
+  updateGeneric(db, "equipment", equipment)
 export const deleteEquipment = (db: Database | null, equipment_id: number) =>
-  deleteGeneric(db, "Equipment", equipment_id)
+  deleteGeneric(db, "equipment", equipment_id)
 
 export const insertNutrition = (
   db: Database | null,
   nutrition: Omit<Nutrition, "id">
-) => insertGeneric(db, "Nutrition", nutrition)
+) => insertGeneric(db, "nutrition", nutrition)
 export const fetchNutritionForRecipe = (
   db: Database | null,
   recipe_id: number
-) => fetchGeneric<Nutrition>(db, "Nutrition", recipe_id)
+) => fetchGeneric<Nutrition>(db, "nutrition", recipe_id)
 export const updateNutrition = (db: Database | null, equipment: Nutrition) =>
-  updateGeneric(db, "Nutrition", equipment)
+  updateGeneric(db, "nutrition", equipment)
 export const deleteNutrition = (db: Database | null, equipment_id: number) =>
-  deleteGeneric(db, "Nutrition", equipment_id)
+  deleteGeneric(db, "nutrition", equipment_id)
 
 export const fetchFullRecipeById = async (
   db: Database | null,
@@ -226,7 +251,7 @@ export const createRecipe = async (
     category: data.category,
     title_image: data.title_image,
     rating: data.rating,
-    favourite: 0,
+    favorite: false,
     prep_time: Number(data.prep_time),
     cook_time: Number(data.cook_time),
     servings: data.servings,
@@ -309,6 +334,9 @@ export const editRecipe = async (
   if (!db) return false
 
   try {
+    // ✅ Fetch original recipe first
+    const existing = await fetchRecipeById(db, recipeId)
+
     // Update main recipe
     const recipe: Recipe = {
       id: recipeId,
@@ -316,7 +344,7 @@ export const editRecipe = async (
       category: data.category,
       title_image: data.title_image,
       rating: data.rating,
-      favourite: 0, // Preserve existing favorite status
+      favorite: existing?.favorite!, // Preserve existing favorite status
       prep_time: data.prep_time,
       cook_time: data.cook_time,
       servings: data.servings,
@@ -392,3 +420,46 @@ export const editRecipe = async (
     return false
   }
 }
+
+export const insertMealPlan = async (
+  db: Database | null,
+  plan: Omit<DailyMealPlan, "id" | "created_at" | "updated_at">
+) => {
+  console.log("🛠️ insertMealPlan called with:", plan)
+
+  const result = await insertGeneric(db, "daily_meal_plan", plan)
+  console.log("🛠️ insert result:", result)
+
+  return result
+}
+
+export const fetchMealPlanByDay = (
+  db: Database | null,
+  day: string
+): Promise<DailyMealPlan | null> =>
+  fetchQuery<DailyMealPlan[]>(
+    db,
+    "SELECT * FROM daily_meal_plan WHERE day = ?1 LIMIT 1",
+    [day]
+  ).then((res) => (res && res.length ? res[0] : null))
+
+export const updateMealPlan = async (
+  db: Database | null,
+  plan: DailyMealPlan
+): Promise<QueryResult | null> => {
+  console.log("🛠️ insertMealPlan called with:", plan)
+
+  const result = await updateGeneric(db, "daily_meal_plan", {
+    ...plan,
+    id: plan.id ?? 0,
+  })
+  console.log("🛠️ insert result:", result)
+
+  return result
+}
+
+export const deleteMealPlanById = (db: Database | null, id: number) =>
+  deleteGeneric(db, "daily_meal_plan", id)
+
+export const fetchAllMealPlans = (db: Database | null) =>
+  fetchQuery<DailyMealPlan[]>(db, "SELECT * FROM daily_meal_plan")

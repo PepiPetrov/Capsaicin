@@ -2,6 +2,7 @@ import Database from "@tauri-apps/plugin-sql"
 
 let dbInstance: Database | null = null
 
+// Do not create/destroy a new DB connection on every single page
 export async function getDatabase(): Promise<Database> {
   if (!dbInstance) {
     try {

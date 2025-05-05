@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-import { RecipeFormReturn } from "."
+import { RecipeFormReturn } from "./schema"
 
 export default function RecipeFormStep3({ form }: { form: RecipeFormReturn }) {
   return (

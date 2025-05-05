@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.asm": "fasm-intel-x86_64",
+        "stdexcept": "cpp"
+    }
+}

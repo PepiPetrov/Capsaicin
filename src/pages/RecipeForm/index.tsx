@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from "react"
 import { createRecipe, editRecipe, fetchFullRecipeById } from "@/db/functions"
 import { Direction, Equipment, Ingredient } from "@/db/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, UseFormReturn } from "react-hook-form"
+import { SubmitHandler, useForm } from "react-hook-form"
 import { useLocation } from "wouter"
 import { z } from "zod"
 
-import useDatabase from "@/lib/useDatabase"
+import useDatabase from "@/hooks/use-database"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -20,82 +20,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Form } from "@/components/ui/form"
 
+import { RecipeFormData, recipeZodSchema } from "./schema"
 import FormStep1 from "./Step1"
 import FormStep2 from "./Step2"
 import FormStep3 from "./Step3"
-
-const zParsedNumber = (msg: string, opts?: { min?: number; max?: number }) => {
-  let schema = z.number({ required_error: msg })
-  if (opts?.min !== undefined)
-    schema = schema.min(opts.min, {
-      message: `Must be no less than ${opts.min.toString()}`,
-    })
-  if (opts?.max !== undefined)
-    schema = schema.max(opts.max, {
-      message: `Must be no more than ${opts.max.toString()}`,
-    })
-  return z.preprocess((val) => {
-    const parsed = parseInt(val as string, 10)
-    return isNaN(parsed) ? undefined : parsed
-  }, schema)
-}
-
-export const recipeZodSchema = z.object({
-  name: z.string().min(1, { message: "A name is required" }),
-  category: z.string().min(1, { message: "At least one category is required" }),
-  rating: zParsedNumber("Rating is required", { min: 1, max: 5 }),
-  prep_time: zParsedNumber("Preparation time is required"),
-  cook_time: zParsedNumber("Cooking time is required"),
-  servings: zParsedNumber("Number of servings is required"),
-  title_image: z
-    .union([
-      z.instanceof(File),
-      z.string().refine((val) => val.startsWith("data:image/"), {
-        message: "Invalid image string",
-      }),
-    ])
-    .transform((val) => {
-      if (typeof val === "string") return val
-      return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-          resolve(reader.result as string)
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(val)
-      })
-    }),
-  isPerServing: z.boolean().default(false),
-  instructions: z.array(z.string()),
-  ingredients: z.array(
-    z.object({
-      ingredient: z.string(),
-      unit: z.string(),
-      quantity: zParsedNumber("Ingredient quantity is required"),
-    })
-  ),
-  equipment: z.array(z.string()),
-  nutrition: z.object({
-    calories: zParsedNumber("Amount of calories is required"),
-    fat: zParsedNumber("Amount of fat is required"),
-    carbs: zParsedNumber("Amount of carbs is required"),
-    protein: zParsedNumber("Amount of protein is required"),
-  }),
-})
-
-export type RecipeFormData = z.infer<typeof recipeZodSchema>
-export type RecipeFormReturn = UseFormReturn<
-  RecipeFormData,
-  unknown,
-  RecipeFormData
->
 
 export default function RecipeForm({ id = -1 }: { id?: number }) {
   const [step, setStep] = useState<number>(0)
   const [, setLocation] = useLocation()
   const { db, error, loading } = useDatabase()
 
-  const form = useForm<z.infer<typeof recipeZodSchema>>({
+  const form = useForm<RecipeFormData>({
     //@ts-expect-error form is valid
     resolver: zodResolver(recipeZodSchema),
     mode: "onChange",
@@ -104,6 +39,7 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
       instructions: [],
       equipment: [],
       isPerServing: false,
+      favorite: false,
     },
   })
 
@@ -122,6 +58,7 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
         servings: fetchedRecipe?.recipe.servings ?? 0,
         title_image: fetchedRecipe?.recipe.title_image,
         isPerServing: true,
+        favorite: fetchedRecipe?.recipe.favorite,
         instructions: fetchedRecipe?.directions.map(
           (d: Direction) => d.description
         ),
@@ -161,10 +98,11 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
     [db, id]
   )
 
-  const onSubmit = (data: z.infer<typeof recipeZodSchema>) => {
-    void callback(data).then((id) => {
-      setLocation(`/details/${id?.toString() ?? ""}`)
-    })
+  const onSubmit: SubmitHandler<z.infer<typeof recipeZodSchema>> = async (
+    data
+  ) => {
+    const id = await callback(data)
+    setLocation(`/details/${(id ?? 0).toString()}`)
   }
 
   const steps = [
@@ -181,20 +119,14 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
     {
       //@ts-expect-error form is valid
       component: <FormStep3 form={form} />,
-      title: "Nutrition",
+      title: "nutrition",
     },
   ]
 
   return !error ? (
     <Form {...form}>
-      <form
-        onSubmit={() =>
-          void form.handleSubmit((data: object) => {
-            onSubmit(data as z.infer<typeof recipeZodSchema>)
-          })()
-        }
-        className="h-full"
-      >
+      {/* @ts-expect-error form is valid */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
         <Card className="mx-auto my-10 max-w-6xl overflow-hidden shadow-lg">
           <CardHeader className="flex items-center justify-between border-b px-6 py-4">
             <div>
@@ -255,62 +187,4 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
       </AlertDialogContent>
     </AlertDialog>
   )
-  // return (
-  //   <Form {...form}>
-  //     <form onSubmit={form.handleSubmit(onSubmit)}>
-  //       <Card
-  //         className={
-  //           "mt-14 h-full w-auto min-w-0 max-w-3xl p-5 md:ml-2 md:mr-2"
-  //         }
-  //       >
-  //         <CardHeader>
-  //           <h2 className="text-2xl font-bold">
-  //             {id != -1 ? "Edit" : "Create"} recipe
-  //           </h2>
-  //           <p className="text-lg text-gray-600">{steps[step].title}</p>
-  //         </CardHeader>
-  //         <CardContent>
-  //           <motion.div
-  //             key={step}
-  //             initial={{ opacity: 0, x: 50 }}
-  //             animate={{ opacity: 1, x: 0 }}
-  //             exit={{ opacity: 0, x: -50 }}
-  //             transition={{ duration: 0 }}
-  //           >
-  //             {steps[step].component}
-  //           </motion.div>
-  //           <div className="mt-4 flex justify-between">
-  //             {step > 0 && (
-  //               <Button
-  //                 type="button"
-  //                 variant="outline"
-  //                 onClick={() => setStep(step == 0 ? step : step - 1)}
-  //               >
-  //                 Back
-  //               </Button>
-  //             )}
-  //             {step + 1 < steps.length ? (
-  //               <Button
-  //                 type="button"
-  //                 onClick={() => {
-  //                   setStep(step + 1)
-  //                 }}
-  //               >
-  //                 Next
-  //               </Button>
-  //             ) : (
-  //               <Button
-  //                 className="ml-auto"
-  //                 type="submit"
-  //                 onClick={() => setShouldRedirect(true)}
-  //               >
-  //                 Submit
-  //               </Button>
-  //             )}
-  //           </div>
-  //         </CardContent>
-  //       </Card>
-  //     </form>
-  //   </Form>
-  // )
 }

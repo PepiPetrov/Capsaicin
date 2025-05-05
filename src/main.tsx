@@ -11,6 +11,8 @@ import Layout from "./components/layout"
 import CreatePage from "./pages/CreatePage"
 import DetailsPage from "./pages/DetailsPage"
 import EditPage from "./pages/EditPage"
+import ImportRecipePage from "./pages/ImportRecipePage"
+import RecipePlanner from "./pages/RecipePlanner"
 import SearchPage from "./pages/SearchPage"
 
 ReactDOM.createRoot(
@@ -50,6 +52,18 @@ ReactDOM.createRoot(
         <Route path="/search">
           <Layout>
             <SearchPage />
+          </Layout>
+        </Route>
+
+        <Route path="/import">
+          <Layout>
+            <ImportRecipePage />
+          </Layout>
+        </Route>
+
+        <Route path="/planner">
+          <Layout>
+            <RecipePlanner />
           </Layout>
         </Route>
       </Router>

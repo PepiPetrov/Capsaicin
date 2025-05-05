@@ -1,15 +1,21 @@
 import { Recipe } from "@/db/types"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Heart, HeartOff } from "lucide-react"
 import { useLocation } from "wouter"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export function RecipeCard({ recipe }: { recipe: Recipe }) {
+import FavoriteButton from "./FavoriteButton"
+
+function RecipeCard({ recipe }: { recipe: Recipe }) {
   const [, setLocation] = useLocation()
+
   return (
-    <Card key={recipe.id} className="rounded-xl shadow-lg">
+    <Card
+      key={recipe.id}
+      className="rounded-xl shadow-lg hover:bg-gray-300 dark:hover:bg-gray-900"
+    >
       <CardHeader className="relative h-40">
         <img
           src={recipe.title_image}
@@ -26,9 +32,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         </p>
         <div className="mb-3 flex items-center gap-2">
           <Badge variant="secondary">{"⭐".repeat(recipe.rating)}</Badge>
-          {recipe.favourite ? (
-            <Badge variant="default">❤️ Favorite</Badge>
-          ) : null}
+          <FavoriteButton recipe={recipe} />
         </div>
         <p className="text-xs text-gray-400">
           Prep: {recipe.prep_time} mins | Cook: {recipe.cook_time} mins
