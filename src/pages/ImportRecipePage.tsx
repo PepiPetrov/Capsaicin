@@ -73,7 +73,7 @@ export default function ImportRecipePage() {
       )
 
       toast({
-        title: `Imported ${inserted.length} recipe(s)`,
+        title: `Imported ${inserted.length.toString()} recipe(s)`,
         variant: "default",
       })
 
@@ -113,7 +113,7 @@ export default function ImportRecipePage() {
               }`}
             />
             <Button
-              onClick={handleImport}
+              onClick={() => void handleImport()}
               disabled={isImporting || !isValidUrl}
               className="bg-green-600 text-white hover:bg-green-700"
             >

@@ -12,7 +12,7 @@ export interface Recipe {
   updated_at?: string // Optional: only used if you store timestamps
 }
 
-export interface Ingredient {
+export interface Ingredient extends Record<string, unknown> {
   id: number
   recipe_id: number
   ingredient: string
@@ -20,20 +20,20 @@ export interface Ingredient {
   unit: string
 }
 
-export interface Direction {
+export interface Direction extends Record<string, unknown> {
   id: number
   recipe_id: number
   title: string
   description: string
 }
 
-export interface Equipment {
+export interface Equipment extends Record<string, unknown> {
   id: number
   recipe_id: number
   equipment: string
 }
 
-export interface Nutrition {
+export interface Nutrition extends Record<string, unknown> {
   id: number
   recipe_id: number
   calories: number

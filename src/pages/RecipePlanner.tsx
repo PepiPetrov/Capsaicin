@@ -60,12 +60,12 @@ export default function RecipePlanner() {
       )
     }
 
-    init()
-  }, [db, rawDay])
+    void init()
+  }, [db, mealType, rawDay])
 
   const handleAssignRecipe = async () => {
     if (!selectedRecipeId || !db) return
-    const id = parseInt(selectedRecipeId)
+    const id = parseInt(selectedRecipeId, 10)
 
     const fallback: Omit<DailyMealPlan, "id" | "created_at" | "updated_at"> = {
       day: rawDay,
@@ -130,7 +130,9 @@ export default function RecipePlanner() {
                 <Button
                   disabled={!mealPlan?.breakfast_id}
                   onClick={() => {
-                    setLocation(`/details/${mealPlan?.breakfast_id ?? 0}`)
+                    setLocation(
+                      `/details/${(mealPlan?.breakfast_id ?? 0).toString()}`
+                    )
                   }}
                 >
                   Breakfast
@@ -138,7 +140,9 @@ export default function RecipePlanner() {
                 <Button
                   disabled={!mealPlan?.lunch_id}
                   onClick={() => {
-                    setLocation(`/details/${mealPlan?.lunch_id ?? ""}`)
+                    setLocation(
+                      `/details/${(mealPlan?.lunch_id ?? 0).toString()}`
+                    )
                   }}
                 >
                   Lunch
@@ -146,7 +150,9 @@ export default function RecipePlanner() {
                 <Button
                   disabled={!mealPlan?.dinner_id}
                   onClick={() => {
-                    setLocation(`/details/${mealPlan?.dinner_id ?? ""}`)
+                    setLocation(
+                      `/details/${(mealPlan?.dinner_id ?? 0).toString()}`
+                    )
                   }}
                 >
                   Dinner
@@ -194,7 +200,7 @@ export default function RecipePlanner() {
               </SelectTrigger>
               <SelectContent>
                 {recipes.map((r) => (
-                  <SelectItem key={r.id} value={r.id!.toString()}>
+                  <SelectItem key={r.id} value={r.id?.toString() ?? ""}>
                     {r.name}
                   </SelectItem>
                 ))}
@@ -202,7 +208,7 @@ export default function RecipePlanner() {
             </Select>
 
             {/* Submit Button */}
-            <Button type="button" onClick={handleAssignRecipe}>
+            <Button type="button" onClick={() => void handleAssignRecipe()}>
               Assign Recipe
             </Button>
           </CardContent>

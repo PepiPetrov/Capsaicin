@@ -30,8 +30,7 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
   const [, setLocation] = useLocation()
   const { db, error, loading } = useDatabase()
 
-  const form = useForm<RecipeFormData>({
-    //@ts-expect-error form is valid
+  const form = useForm({
     resolver: zodResolver(recipeZodSchema),
     mode: "onChange",
     defaultValues: {
@@ -98,11 +97,10 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
     [db, id]
   )
 
-  const onSubmit: SubmitHandler<z.infer<typeof recipeZodSchema>> = async (
-    data
-  ) => {
-    const id = await callback(data)
-    setLocation(`/details/${(id ?? 0).toString()}`)
+  const onSubmit: SubmitHandler<RecipeFormData> = (data) => {
+    void callback(data).then((id) => {
+      setLocation(`/details/${(id ?? 0).toString()}`)
+    })
   }
 
   const steps = [
@@ -125,8 +123,10 @@ export default function RecipeForm({ id = -1 }: { id?: number }) {
 
   return !error ? (
     <Form {...form}>
-      {/* @ts-expect-error form is valid */}
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
+      <form
+        onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
+        className="h-full"
+      >
         <Card className="mx-auto my-10 max-w-6xl overflow-hidden shadow-lg">
           <CardHeader className="flex items-center justify-between border-b px-6 py-4">
             <div>

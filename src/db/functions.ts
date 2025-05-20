@@ -64,13 +64,13 @@ async function fetchGeneric<T>(
   )
 }
 
-async function updateGeneric<T extends { id: number }>(
+async function updateGeneric(
   db: Database | null,
   table: string,
-  data: T
+  data: { id: number } & Record<string, unknown>
 ): Promise<QueryResult | null> {
   const keys = Object.keys(data).filter((k) => k !== "id")
-  const values = keys.map((k) => data[k as keyof { id: number }])
+  const values = keys.map((k) => data[k])
   const setClause = keys
     .map((k, i) => `${k} = ?${(i + 2).toString()}`)
     .join(", ")
@@ -93,19 +93,9 @@ export const insertRecipe = (db: Database | null, recipe: Omit<Recipe, "id">) =>
   insertGeneric(db, "recipes", recipe)
 
 export const fetchRecipeById = (db: Database | null, id: number) =>
-  fetchQuery<Recipe[]>(db, `SELECT * FROM recipes WHERE id = ?1 LIMIT 1`, [id])
-    .then((recipes) => (recipes ? recipes[0] : null))
-    .then((r) => {
-      if (r) {
-        //@ts-ignore valid
-        if (!r.favorite || r.favorite == "false") {
-          r.favorite = false
-        } else {
-          r.favorite = true
-        }
-      }
-      return r
-    })
+  fetchQuery<Recipe[]>(db, `SELECT * FROM recipes WHERE id = ?1 LIMIT 1`, [
+    id,
+  ]).then((recipes) => (recipes ? recipes[0] : null))
 
 export const fetchAllRecipes = (db: Database | null) =>
   fetchQuery<Recipe[]>(db, "SELECT * FROM recipes")
@@ -119,14 +109,11 @@ export const favoriteRecipe = async (
   recipe: Recipe,
   favorite: boolean
 ): Promise<boolean> => {
-  recipe.favorite = favorite
   const result = await updateGeneric(db, "recipes", {
     ...recipe,
+    favorite: Number(favorite), // ✅ Force integer (SQLite boolean)
     id: recipe.id ?? 0,
   })
-
-  console.log(result)
-
   return result !== null
 }
 
@@ -344,7 +331,7 @@ export const editRecipe = async (
       category: data.category,
       title_image: data.title_image,
       rating: data.rating,
-      favorite: existing?.favorite!, // Preserve existing favorite status
+      favorite: existing?.favorite ?? false, // Preserve existing favorite status
       prep_time: data.prep_time,
       cook_time: data.cook_time,
       servings: data.servings,
@@ -441,7 +428,7 @@ export const fetchMealPlanByDay = (
     db,
     "SELECT * FROM daily_meal_plan WHERE day = ?1 LIMIT 1",
     [day]
-  ).then((res) => (res && res.length ? res[0] : null))
+  ).then((res) => (res?.length ? res[0] : null))
 
 export const updateMealPlan = async (
   db: Database | null,

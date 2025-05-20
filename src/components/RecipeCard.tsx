@@ -1,5 +1,5 @@
 import { Recipe } from "@/db/types"
-import { AlertCircle, Heart, HeartOff } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import { useLocation } from "wouter"
 
 import { Badge } from "@/components/ui/badge"

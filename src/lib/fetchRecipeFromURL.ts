@@ -9,6 +9,32 @@ import type {
 import { fetch } from "@tauri-apps/plugin-http"
 import * as cheerio from "cheerio"
 
+interface LDRecipe {
+  "@type": string | string[]
+  name?: string
+  image?: string | { url?: string } | (string | { url?: string })[]
+  recipeCategory?: string[]
+  aggregateRating?: { ratingValue?: string }
+  prepTime?: string
+  cookTime?: string
+  recipeYield?: string | string[]
+  recipeIngredient?: string[]
+  recipeInstructions?: LDInstruction[] | string
+  nutrition?: {
+    calories?: string
+    fatContent?: string
+    carbohydrateContent?: string
+    proteinContent?: string
+  }
+}
+
+interface LDInstruction {
+  "@type": string
+  text?: string
+  name?: string
+  itemListElement?: LDInstruction[]
+}
+
 export async function fetchRecipesFromUrl(
   urlStr: string
 ): Promise<FullRecipeFetch[]> {
@@ -28,23 +54,27 @@ export async function fetchRecipesFromUrl(
 
   const parseServings = (val: string | string[] | undefined): number => {
     if (!val) return 1
-    if (typeof val === "object") val = val[0]
+    if (Array.isArray(val)) val = val[0]
     const match = /\d+/.exec(val)
-    return match ? parseInt(match[0]) : 1
+    return match ? parseInt(match[0], 10) : 1
   }
 
-  const normalizeImage = (input: any): string => {
+  const normalizeImage = (
+    input: string | { url?: string } | (string | { url?: string })[]
+  ): string => {
     if (typeof input === "string") return input
     if (Array.isArray(input)) {
       const first = input[0]
       if (typeof first === "string") return first
-      if (first?.url) return first.url
+      if (first.url) return first.url
     }
-    if (input?.url) return input.url
+    //@ts-expect-error url property exists
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    if (typeof input === "object" && input.url) return input.url
     return (
-      $("meta[property='og:image']").attr("content") ||
-      $("img[itemprop='image']").first().attr("src") ||
-      $("img").first().attr("src") ||
+      $("meta[property='og:image']").attr("content") ??
+      $("img[itemprop='image']").first().attr("src") ??
+      $("img").first().attr("src") ??
       ""
     )
   }
@@ -75,7 +105,7 @@ export async function fetchRecipesFromUrl(
     for (const part of parts) {
       if (unicodeMap[part]) total += unicodeMap[part]
       else if (part.includes("/")) {
-        const [num, denom] = part.split("/").map(Number)
+        const [num, denom] = part.split("/").map((n) => parseFloat(n))
         if (!isNaN(num) && !isNaN(denom) && denom !== 0) {
           total += num / denom
         }
@@ -86,20 +116,23 @@ export async function fetchRecipesFromUrl(
     return total || 1
   }
 
-  const parseIngredients = (raw: any, recipeId: number): Ingredient[] => {
+  const parseIngredients = (
+    raw: string[] | undefined,
+    recipeId: number
+  ): Ingredient[] => {
     if (!Array.isArray(raw)) return []
-    return raw.map((entry: string, idx) => {
+    return raw.map((entry, idx) => {
       const cleaned = entry.replace(/\(.*?\)/g, "").trim()
-      const match = /^([\d\s\/.,¼-⅞]+)?\s*([a-zA-Z]+)?\s*(.*)$/.exec(cleaned)
+      const match = /^([\d\s/.,¼-⅞]+)?\s*([a-zA-Z]+)?\s*(.*)$/.exec(cleaned)
       const rawQty = (match?.[1] ?? "1").split(/[-–]/)[0].trim()
       const quantity = parseQuantityParts(rawQty)
       const unit = match?.[2]?.trim() ?? ""
-      let ingredient = match?.[3]?.trim() || cleaned
+      let ingredient = match?.[3]?.trim() ?? cleaned
 
       const altMatch = /^(.*?)\s*[–\-:]\s*(\d.*)$/.exec(cleaned)
       if (altMatch) {
         ingredient = altMatch[1].trim()
-        const match2 = /^([\d\s\/.,¼-⅞]+)?\s*([a-zA-Z]+)?/.exec(altMatch[2])
+        const match2 = /^([\d\s/.,¼-⅞]+)?\s*([a-zA-Z]+)?/.exec(altMatch[2])
         const altQty = parseQuantityParts(match2?.[1] ?? "1")
         return {
           id: idx + 1,
@@ -120,83 +153,87 @@ export async function fetchRecipesFromUrl(
     })
   }
 
-  const flattenInstructions = (raw: any): string[] => {
+  const flattenInstructions = (raw: LDInstruction[] | string): string[] => {
     if (typeof raw === "string") return [raw]
     if (Array.isArray(raw)) {
       return raw.flatMap((item) =>
-        item?.["@type"] === "HowToStep"
-          ? [item.text || item.name || ""]
-          : item?.["@type"] === "HowToSection"
-            ? flattenInstructions(item.itemListElement)
-            : typeof item === "string"
-              ? [item]
-              : []
+        item["@type"] === "HowToStep"
+          ? [item.text ?? item.name ?? ""]
+          : item["@type"] === "HowToSection"
+            ? flattenInstructions(item.itemListElement ?? [])
+            : []
       )
     }
     return []
   }
 
-  const parseDirections = (raw: any, recipeId: number): Direction[] => {
+  const parseDirections = (
+    raw: LDInstruction[] | string,
+    recipeId: number
+  ): Direction[] => {
     const steps = flattenInstructions(raw)
     return steps.map((desc, i) => ({
       id: i + 1,
       recipe_id: recipeId,
-      title: `Step ${i + 1}`,
+      title: `Step ${(i + 1).toString()}`,
       description: desc,
     }))
   }
 
-  const parseNutrition = (data: any, recipeId: number): Nutrition => ({
+  const parseNutrition = (
+    data: LDRecipe["nutrition"] = {},
+    recipeId: number
+  ): Nutrition => ({
     id: recipeId,
     recipe_id: recipeId,
-    calories: parseFloat(data?.calories) || 0,
-    fat: parseFloat(data?.fatContent) || 0,
-    carbs: parseFloat(data?.carbohydrateContent) || 0,
-    protein: parseFloat(data?.proteinContent) || 0,
+    calories: parseFloat(data.calories ?? "0"),
+    fat: parseFloat(data.fatContent ?? "0"),
+    carbs: parseFloat(data.carbohydrateContent ?? "0"),
+    protein: parseFloat(data.proteinContent ?? "0"),
   })
 
   const parseISOTime = (iso: string | undefined): number => {
     if (!iso || typeof iso !== "string") return 0
     const match = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(iso)
     if (!match) return 0
-    const hours = parseInt(match[1] || "0")
-    const minutes = parseInt(match[2] || "0")
+    const hours = parseInt(match[1] || "0", 10)
+    const minutes = parseInt(match[2] || "0", 10)
     return hours * 60 + minutes
   }
 
-  const extractAllSchemas = (obj: any): any[] => {
-    const result: any[] = []
+  const extractAllSchemas = (obj: unknown): LDRecipe[] => {
+    const result: LDRecipe[] = []
     const queue = [obj]
     while (queue.length) {
       const current = queue.shift()
       if (!current || typeof current !== "object") continue
-      if (current["@type"]) result.push(current)
-      for (const key in current) {
-        if (typeof current[key] === "object") queue.push(current[key])
+      const currObj = current as Record<string, unknown>
+      if (currObj["@type"]) result.push(currObj as unknown as LDRecipe)
+      for (const key in currObj) {
+        if (typeof currObj[key] === "object") queue.push(currObj[key])
       }
     }
     return result
   }
 
   const processRecipeSchema = (
-    data: any,
-    resultArr: FullRecipeFetch[],
-    pageUrl: string
+    data: LDRecipe,
+    resultArr: FullRecipeFetch[]
   ) => {
     const type = data["@type"]
     const isRecipe = Array.isArray(type)
-      ? type.includes("recipes")
-      : type === "recipes"
+      ? type.includes("Recipe")
+      : type === "Recipe"
     if (!isRecipe) return
 
     const id = Date.now() + resultArr.length
     const recipe: Recipe = {
       id,
-      name: data.name || "Untitled",
-      category: data.recipeCategory.join(", ") || "Uncategorized",
-      title_image: normalizeImage(data.image),
-      rating: parseFloat(data.aggregateRating?.ratingValue) || 0,
-      favorite: 0,
+      name: data.name ?? "Untitled",
+      category: (data.recipeCategory ?? []).join(", ") || "Uncategorized",
+      title_image: normalizeImage(data.image ?? ""),
+      rating: parseFloat(data.aggregateRating?.ratingValue ?? "0"),
+      favorite: false,
       prep_time: parseISOTime(data.prepTime),
       cook_time: parseISOTime(data.cookTime),
       servings: parseServings(data.recipeYield),
@@ -205,35 +242,32 @@ export async function fetchRecipesFromUrl(
     }
 
     const ingredients = parseIngredients(data.recipeIngredient, id)
-    const directions = parseDirections(data.recipeInstructions, id)
+    const directions = parseDirections(data.recipeInstructions ?? [], id)
     const equipment: Equipment[] = []
-    const nutrition = parseNutrition(data.nutrition || {}, id)
+    const nutrition = parseNutrition(data.nutrition, id)
 
     resultArr.push({ recipe, ingredients, directions, equipment, nutrition })
   }
 
-  const jsonLdRecipes: any[] = []
+  const jsonLdRecipes: LDRecipe[] = []
   $('script[type="application/ld+json"]').each((_, el) => {
     try {
       const content = $(el).text().trim()
-      const json = JSON.parse(content)
+      const json = JSON.parse(content) as unknown
       const items = extractAllSchemas(json)
       for (const item of items) {
-        if (
-          Array.isArray(item["@type"])
-            ? item["@type"].includes("recipes")
-            : item["@type"] === "recipes"
-        ) {
+        const type = item["@type"]
+        if (Array.isArray(type) ? type.includes("Recipe") : type === "Recipe") {
           jsonLdRecipes.push(item)
         }
       }
     } catch {
-      // skip bad scripts
+      // silently ignore
     }
   })
 
   for (const schema of jsonLdRecipes) {
-    processRecipeSchema(schema, results, url.href)
+    processRecipeSchema(schema, results)
   }
 
   return results

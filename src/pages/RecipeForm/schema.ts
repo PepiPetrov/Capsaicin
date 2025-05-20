@@ -66,7 +66,7 @@ export const recipeZodSchema = z.object({
             path: [index, "unit"],
           })
         }
-        if (item.quantity === undefined || item.quantity <= 0) {
+        if (item.quantity <= 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "Quantity must be greater than 0",

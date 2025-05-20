@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { favoriteRecipe } from "@/db/functions"
 import { Recipe } from "@/db/types"
 import { Heart, HeartOff } from "lucide-react"
@@ -21,8 +21,8 @@ export default function FavoriteButton({
     <Button
       variant={favorite ? "secondary" : "outline"}
       onClick={() => {
-        favoriteRecipe(db, recipe, !favorite).then((success) => {
-          if (success) setFavorite(!favorite) // ✅ only toggle if DB update worked
+        void favoriteRecipe(db, recipe, !favorite).then((success) => {
+          if (success) setFavorite(!favorite)
         })
       }}
       aria-pressed={favorite}

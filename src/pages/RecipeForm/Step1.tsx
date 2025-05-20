@@ -54,7 +54,7 @@ export default function RecipeFormStep1({ form }: RecipeFormStep1Props) {
                     <Input
                       placeholder="Recipe name"
                       {...field}
-                      value={field.value ?? ""}
+                      value={field.value}
                     />
                   </FormControl>
                   <FormMessage />
@@ -68,10 +68,7 @@ export default function RecipeFormStep1({ form }: RecipeFormStep1Props) {
                 <FormItem>
                   <FormLabel>Recipe category</FormLabel>
                   <FormControl>
-                    <TagInput
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                    />
+                    <TagInput value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -100,7 +97,7 @@ export default function RecipeFormStep1({ form }: RecipeFormStep1Props) {
                       min={0}
                       max={5}
                       placeholder="Rating"
-                      value={field.value ?? ""}
+                      value={field.value}
                       onChange={field.onChange}
                     />
                   </FormControl>
@@ -185,7 +182,7 @@ export default function RecipeFormStep1({ form }: RecipeFormStep1Props) {
                       type="number"
                       min={0}
                       placeholder="Prep time (minutes)"
-                      value={field.value ?? ""}
+                      value={field.value}
                       onChange={field.onChange}
                     />
                   </FormControl>
@@ -204,7 +201,7 @@ export default function RecipeFormStep1({ form }: RecipeFormStep1Props) {
                       type="number"
                       min={0}
                       placeholder="Cook time (minutes)"
-                      value={field.value ?? ""}
+                      value={field.value}
                       onChange={field.onChange}
                     />
                   </FormControl>

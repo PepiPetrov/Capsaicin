@@ -13,7 +13,7 @@ fn main() {
                 name TEXT NOT NULL,
                 title_image TEXT NOT NULL,
                 rating INTEGER,
-                favorite BOOLEAN DEFAULT 0,
+                favorite BOOLEAN NOT NULL DEFAULT 0,
                 category TEXT,
                 prep_time INTEGER,
                 cook_time INTEGER,
