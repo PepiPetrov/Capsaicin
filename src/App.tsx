@@ -12,8 +12,7 @@ function App() {
   useEffect(() => {
     const fetchRecipes = async () => {
       const result = await fetchAllRecipes(db)
-      console.log(result)
-      setRecipes(result ?? [])
+      setRecipes(result)
     }
 
     void fetchRecipes()

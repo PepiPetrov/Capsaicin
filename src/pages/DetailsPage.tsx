@@ -212,7 +212,7 @@ export default function DetailsPage({ id }: { id: number }) {
           {recipe?.nutrition && (
             <div className="rounded-xl bg-white p-4 shadow dark:bg-gray-900">
               <h2 className="mb-3 text-lg font-bold text-gray-800 dark:text-gray-100">
-                Nutrition Info
+                Nutrition Info (per serving)
               </h2>
               <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <div>

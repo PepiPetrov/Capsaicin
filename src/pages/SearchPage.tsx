@@ -4,6 +4,13 @@ import { Recipe } from "@/db/types"
 
 import useDatabase from "@/hooks/use-database"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { RecipeList } from "@/components/RecipeCard"
 
@@ -50,13 +57,10 @@ export default function SearchPage() {
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      const result = ((await fetchAllRecipes(db)) ?? []).map(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        ({ id, created_at: _c, updated_at: _u, ...rest }) => ({
-          ...rest,
-          id: id ?? 0, // keep id if needed by RecipeList
-        })
-      )
+      const result = (await fetchAllRecipes(db)).map(({ id, ...rest }) => ({
+        ...rest,
+        id: id ?? 0, // keep id if needed by RecipeList
+      }))
       setRecipes(result)
 
       if (result.length > 0) {
@@ -68,7 +72,8 @@ export default function SearchPage() {
           if (EXCLUDED_FIELDS.includes(key as keyof Recipe)) continue
 
           const value = sample[key as Exclude<keyof Recipe, RecipeExcludedKeys>]
-          if (typeof value === "boolean") inferredTypes[key] = "boolean"
+          if (typeof value === "boolean" || key === "favorite")
+            inferredTypes[key] = "boolean"
           else if (typeof value === "number") inferredTypes[key] = "number"
           else inferredTypes[key] = "string"
         }
@@ -93,7 +98,7 @@ export default function SearchPage() {
         const field = recipe[column]
 
         if (isBooleanColumn(column)) {
-          if (!value) return true
+          if (!value || value === "all") return true
           const target = value === "true"
           return field === (target ? 1 : 0)
         }
@@ -156,60 +161,69 @@ export default function SearchPage() {
 
         {filters.map((f, i) => (
           <div key={i} className="flex items-center gap-2">
-            <select
+            <Select
               value={f.column}
-              onChange={(e) => {
+              onValueChange={(value) => {
                 const newFilters = [...filters]
-                newFilters[i].column = e.target.value as keyof Recipe
-                newFilters[i].value = ""
+                newFilters[i].column = value as keyof Recipe
+                newFilters[i].value = isBooleanColumn(value as keyof Recipe)
+                  ? "all"
+                  : ""
                 setFilters(newFilters)
               }}
-              className="rounded border px-2 py-1"
             >
-              {columnKeys.map((key) => (
-                <option key={key} value={key}>
-                  {processColumnName(key)}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select column" />
+              </SelectTrigger>
+              <SelectContent>
+                {columnKeys.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {processColumnName(key)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {isNumericColumn(f.column) && (
-              <select
+              <Select
                 value={f.op}
-                onChange={(e) => {
+                onValueChange={(value) => {
                   const newFilters = [...filters]
-                  newFilters[i].op = e.target.value as
-                    | "eq"
-                    | "gt"
-                    | "gte"
-                    | "lt"
-                    | "lte"
+                  newFilters[i].op = value as "eq" | "gt" | "gte" | "lt" | "lte"
                   setFilters(newFilters)
                 }}
-                className="rounded border px-2 py-1"
               >
-                <option value="eq">=</option>
-                <option value="gt">&gt;</option>
-                <option value="gte">&ge;</option>
-                <option value="lt">&lt;</option>
-                <option value="lte">&le;</option>
-              </select>
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Operation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="eq">=</SelectItem>
+                  <SelectItem value="gt">&gt;</SelectItem>
+                  <SelectItem value="gte">&ge;</SelectItem>
+                  <SelectItem value="lt">&lt;</SelectItem>
+                  <SelectItem value="lte">&le;</SelectItem>
+                </SelectContent>
+              </Select>
             )}
 
             {isBooleanColumn(f.column) ? (
-              <select
+              <Select
                 value={f.value}
-                onChange={(e) => {
+                onValueChange={(value) => {
                   const newFilters = [...filters]
-                  newFilters[i].value = e.target.value
+                  newFilters[i].value = value
                   setFilters(newFilters)
                 }}
-                className="rounded border px-2 py-1"
               >
-                <option value="">All</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Value" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="true">Yes</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
             ) : (
               <Input
                 placeholder="Value"
@@ -238,30 +252,38 @@ export default function SearchPage() {
 
         <div className="flex items-center gap-2 pt-2">
           <label className="text-sm">Sort by:</label>
-          <select
+          <Select
             value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value as keyof Recipe)
+            onValueChange={(value) => {
+              setSortBy(value as keyof Recipe)
             }}
-            className="rounded border px-2 py-1"
           >
-            {columnKeys.map((key) => (
-              <option key={key} value={key}>
-                {processColumnName(key)}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select column" />
+            </SelectTrigger>
+            <SelectContent>
+              {columnKeys.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {processColumnName(key)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <select
+          <Select
             value={sortOrder}
-            onChange={(e) => {
-              setSortOrder(e.target.value as "asc" | "desc")
+            onValueChange={(value) => {
+              setSortOrder(value as "asc" | "desc")
             }}
-            className="rounded border px-2 py-1"
           >
-            <option value="asc">Asc</option>
-            <option value="desc">Desc</option>
-          </select>
+            <SelectTrigger className="w-24">
+              <SelectValue placeholder="Order" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Asc</SelectItem>
+              <SelectItem value="desc">Desc</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <Separator />

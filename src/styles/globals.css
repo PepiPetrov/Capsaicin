@@ -134,3 +134,36 @@ ul[data-type="taskList"] li {
   align-items: center;
   gap: 1vh; /* Adjust spacing between checkbox and text */
 }
+
+/* Error highlighting styles */
+.error-highlight {
+  animation: error-pulse 0.8s ease-in-out;
+  box-shadow: 0 0 0 2px hsl(var(--destructive)) !important;
+  border-color: hsl(var(--destructive)) !important;
+}
+
+/* Enhanced error highlighting for form controls */
+.error-highlight input,
+.error-highlight textarea,
+.error-highlight .ProseMirror {
+  border-color: hsl(var(--destructive)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--destructive) / 0.2) !important;
+}
+
+@keyframes error-pulse {
+  0% {
+    box-shadow: 0 0 0 0 hsl(var(--destructive));
+  }
+  25% {
+    box-shadow: 0 0 0 4px hsl(var(--destructive) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px hsl(var(--destructive) / 0.2);
+  }
+  75% {
+    box-shadow: 0 0 0 4px hsl(var(--destructive) / 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 2px hsl(var(--destructive));
+  }
+}

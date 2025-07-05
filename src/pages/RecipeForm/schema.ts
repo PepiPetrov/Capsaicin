@@ -29,7 +29,7 @@ export const recipeZodSchema = z.object({
         reader.readAsDataURL(val)
       })
     }),
-  isPerServing: z.boolean().default(false),
+  isPerServing: z.boolean().default(true),
   instructions: z.array(z.string()).superRefine((list, ctx) => {
     list.forEach((item, index) => {
       if (!item || item.trim().length === 0) {

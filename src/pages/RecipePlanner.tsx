@@ -41,7 +41,7 @@ export default function RecipePlanner() {
       if (!db) return
 
       const allRecipes = await fetchAllRecipes(db)
-      allRecipes?.map((x) => {
+      allRecipes.map((x) => {
         console.log(x.id)
       })
       const plan = await fetchMealPlanByDay(db, rawDay)
@@ -54,9 +54,9 @@ export default function RecipePlanner() {
       if (mealType === "dinner")
         setSelectedRecipeId(plan?.dinner_id?.toString() ?? "")
 
-      setRecipes(allRecipes ?? [])
+      setRecipes(allRecipes)
       setSelectedRecipeId(
-        allRecipes ? (allRecipes[0].id?.toString() ?? "0") : "0"
+        allRecipes.length > 0 ? (allRecipes[0].id?.toString() ?? "0") : "0"
       )
     }
 

@@ -2,6 +2,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri_plugin_sql::{Migration, MigrationKind};
+use tauri_plugin_http::reqwest;
+
+#[tauri::command]
+async fn fetch_url(url: String) -> Result<String, String> {
+    let response = reqwest::get(&url).await.map_err(|e| e.to_string())?;
+    let body = response.text().await.map_err(|e| e.to_string())?;
+    Ok(body)
+}
 
 fn main() {
     let migrations = vec![
@@ -13,7 +21,7 @@ fn main() {
                 name TEXT NOT NULL,
                 title_image TEXT NOT NULL,
                 rating INTEGER,
-                favorite BOOLEAN NOT NULL DEFAULT 0,
+                favorite INTEGER NOT NULL DEFAULT 0 CHECK (favorite IN (0, 1)),
                 category TEXT,
                 prep_time INTEGER,
                 cook_time INTEGER,
@@ -104,12 +112,11 @@ fn main() {
     //     );
     //     Ok(())
     // })
-    tauri::Builder::default()
+    tauri::Builder::default().invoke_handler(tauri::generate_handler![fetch_url])
         .plugin(tauri_plugin_http::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:capsaicin.db", migrations)
-                .build(),
+                .add_migrations("sqlite:capsaicin.db", migrations).build(),
         )
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

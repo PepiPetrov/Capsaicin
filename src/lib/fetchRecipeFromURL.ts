@@ -6,7 +6,7 @@ import type {
   Nutrition,
   Recipe,
 } from "@/db/types"
-import { fetch } from "@tauri-apps/plugin-http"
+import { invoke } from "@tauri-apps/api/core"
 import * as cheerio from "cheerio"
 
 interface LDRecipe {
@@ -43,12 +43,16 @@ export async function fetchRecipesFromUrl(
     throw new Error("Invalid URL protocol")
   }
 
-  const response = await fetch(url, {
-    connectTimeout: 10000,
-  })
+  const response = await invoke("fetch_url", { url: url.toString() })
 
-  if (!response.ok) throw new Error("Failed to fetch URL")
-  const html = await response.text()
+  // if (!response.ok) {
+  //   console.error(`Fetch failed with status ${response.status}`)
+  //   throw new Error("Failed to fetch URL")
+  // }
+
+  // if (!response.ok) throw new Error("Failed to fetch URL")
+  // const html = await response.text()
+  const html = response as string
   const $ = cheerio.load(html)
   const results: FullRecipeFetch[] = []
 

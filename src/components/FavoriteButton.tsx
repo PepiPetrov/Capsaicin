@@ -17,11 +17,17 @@ export default function FavoriteButton({
 }: FavoriteButtonProps) {
   const { db } = useDatabase()
   const [favorite, setFavorite] = useState(recipe.favorite)
+  console.log(recipe.favorite, typeof recipe.favorite)
   return (
     <Button
       variant={favorite ? "secondary" : "outline"}
       onClick={() => {
+        console.log(
+          `Toggling favorite status for recipe: ${String(recipe.id)}, favorite: ${String(!favorite)} ${typeof favorite}`
+        )
+
         void favoriteRecipe(db, recipe, !favorite).then((success) => {
+          console.log("Favorite status updated:", success)
           if (success) setFavorite(!favorite)
         })
       }}

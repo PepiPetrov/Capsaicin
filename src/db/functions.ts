@@ -40,14 +40,18 @@ async function fetchQuery<T>(
 async function insertGeneric(
   db: Database | null,
   table: string,
-  data: object
+  data: Record<string, unknown>
 ): Promise<QueryResult | null> {
-  const keys = Object.keys(data).join(", ")
-  const values = Object.values(data)
+  const keys = Object.keys(data)
+  const values = keys.map((k) => {
+    const v = data[k]
+    if (typeof v === "boolean") return Number(v)
+    return v
+  })
   const placeholders = values.map(() => "?").join(", ")
   return executeQuery(
     db,
-    `INSERT INTO ${table} (${keys}) VALUES (${placeholders})`,
+    `INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`,
     values
   )
 }
@@ -70,14 +74,20 @@ async function updateGeneric(
   data: { id: number } & Record<string, unknown>
 ): Promise<QueryResult | null> {
   const keys = Object.keys(data).filter((k) => k !== "id")
-  const values = keys.map((k) => data[k])
+  const values = keys.map((k) => {
+    const v = data[k]
+    if (typeof v === "boolean") return Number(v)
+    return v
+  })
   const setClause = keys
     .map((k, i) => `${k} = ?${(i + 2).toString()}`)
     .join(", ")
-  return executeQuery(db, `UPDATE ${table} SET ${setClause} WHERE id = ?1`, [
-    data.id,
-    ...values,
-  ])
+  const params: unknown[] = [data.id, ...values]
+  return executeQuery(
+    db,
+    `UPDATE ${table} SET ${setClause} WHERE id = ?1`,
+    params
+  )
 }
 
 async function deleteGeneric(
@@ -97,8 +107,10 @@ export const fetchRecipeById = (db: Database | null, id: number) =>
     id,
   ]).then((recipes) => (recipes ? recipes[0] : null))
 
-export const fetchAllRecipes = (db: Database | null) =>
-  fetchQuery<Recipe[]>(db, "SELECT * FROM recipes")
+export const fetchAllRecipes = async (db: Database | null) => {
+  const recipes = await fetchQuery<Recipe[]>(db, "SELECT * FROM recipes")
+  return recipes ?? []
+}
 
 export const updateRecipe = (db: Database | null, recipe: Recipe) => {
   void updateGeneric(db, "recipes", { ...recipe, id: recipe.id ?? 0 })
@@ -111,7 +123,7 @@ export const favoriteRecipe = async (
 ): Promise<boolean> => {
   const result = await updateGeneric(db, "recipes", {
     ...recipe,
-    favorite: Number(favorite), // ✅ Force integer (SQLite boolean)
+    favorite: favorite, // ✅ Force integer (SQLite boolean)
     id: recipe.id ?? 0,
   })
   return result !== null
@@ -185,6 +197,9 @@ export const fetchFullRecipeById = async (
     // Fetch Recipe
     const recipe = await fetchRecipeById(db, recipe_id)
     if (!recipe) return null
+
+    // Map favorite to boolean
+    // recipe.favorite = Boolean(Number(recipe.favorite))
 
     // Fetch Related Data
     const [ingredients, directions, equipment, nutrition] = await Promise.all([
@@ -284,10 +299,14 @@ export const createRecipe = async (
   )
 
   // Insert nutrition
-  let { calories } = data.nutrition
-  const { fat, protein, carbs } = data.nutrition
+  let { calories, fat, protein, carbs } = data.nutrition
 
-  if (!data.isPerServing) calories /= data.servings
+  if (!data.isPerServing) {
+    calories /= data.servings
+    fat /= data.servings
+    protein /= data.servings
+    carbs /= data.servings
+  }
 
   await insertNutrition(db, {
     recipe_id: recipeId,
