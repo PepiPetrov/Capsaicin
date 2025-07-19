@@ -8,6 +8,8 @@ import App from "./App"
 import "./styles/globals.css"
 
 import Layout from "./components/layout"
+import CategoriesPage from "./pages/CategoriesPage"
+import CategoryDetailsPage from "./pages/CategoryDetailsPage"
 import CreatePage from "./pages/CreatePage"
 import DetailsPage from "./pages/DetailsPage"
 import EditPage from "./pages/EditPage"
@@ -65,6 +67,20 @@ ReactDOM.createRoot(
           <Layout>
             <RecipePlanner />
           </Layout>
+        </Route>
+
+        <Route path="/categories">
+          <Layout>
+            <CategoriesPage />
+          </Layout>
+        </Route>
+
+        <Route path="/categories/:category">
+          {(params) => (
+            <Layout>
+              <CategoryDetailsPage category={params.category} />
+            </Layout>
+          )}
         </Route>
       </Router>
     </Router>

@@ -19,7 +19,12 @@ function processColumnName(col: string): string {
   return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1)
 }
 
-const EXCLUDED_FIELDS: (keyof Recipe)[] = ["id", "created_at", "updated_at"]
+const EXCLUDED_FIELDS: (keyof Recipe)[] = [
+  "id",
+  "created_at",
+  "updated_at",
+  "category", // We have a separate page for categories
+]
 type RecipeExcludedKeys = "id" | "created_at" | "updated_at"
 
 export default function SearchPage() {

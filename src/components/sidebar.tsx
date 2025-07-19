@@ -1,5 +1,11 @@
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons"
-import { CalendarIcon, Home, PlusCircleIcon, PlusIcon } from "lucide-react"
+import {
+  CalendarIcon,
+  FolderIcon,
+  Home,
+  PlusCircleIcon,
+  PlusIcon,
+} from "lucide-react"
 
 import {
   Sidebar,
@@ -24,6 +30,11 @@ const items = [
     title: "Create",
     url: "#create",
     icon: PlusIcon,
+  },
+  {
+    title: "Categories",
+    url: "#categories",
+    icon: FolderIcon,
   },
   {
     title: "Search",

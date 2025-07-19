@@ -469,3 +469,41 @@ export const deleteMealPlanById = (db: Database | null, id: number) =>
 
 export const fetchAllMealPlans = (db: Database | null) =>
   fetchQuery<DailyMealPlan[]>(db, "SELECT * FROM daily_meal_plan")
+
+// === Category Operations ===
+export const fetchAllCategories = async (db: Database | null) => {
+  const categories = await fetchQuery<{ category: string; count: number }[]>(
+    db,
+    `SELECT category, COUNT(*) as count 
+     FROM recipes 
+     WHERE category IS NOT NULL AND category != ''
+     GROUP BY category 
+     ORDER BY category`
+  )
+  return categories ?? []
+}
+
+export const fetchRecipesByCategory = async (
+  db: Database | null,
+  category: string
+) => {
+  const recipes = await fetchQuery<Recipe[]>(
+    db,
+    "SELECT * FROM recipes WHERE category = ?1 ORDER BY name",
+    [category]
+  )
+  return recipes ?? []
+}
+
+export const fetchSampleRecipesByCategory = async (
+  db: Database | null,
+  category: string,
+  limit: number = 3
+) => {
+  const recipes = await fetchQuery<Recipe[]>(
+    db,
+    "SELECT * FROM recipes WHERE category = ?1 ORDER BY created_at DESC LIMIT ?2",
+    [category, limit]
+  )
+  return recipes ?? []
+}
