@@ -498,7 +498,7 @@ export const fetchRecipesByCategory = async (
 export const fetchSampleRecipesByCategory = async (
   db: Database | null,
   category: string,
-  limit: number = 3
+  limit = 3
 ) => {
   const recipes = await fetchQuery<Recipe[]>(
     db,
